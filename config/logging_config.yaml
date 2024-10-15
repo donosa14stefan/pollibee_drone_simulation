@@ -1,0 +1,23 @@
+# Logging configuration file
+
+# Logging settings
+logging:
+  level: DEBUG
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  datefmt: "%Y-%m-%d %H:%M:%S"
+
+# Log file settings
+log_file:
+  filename: "yolo_simulation.log"
+  max_size: 10MB
+  backup_count: 5
+
+# Console logging settings
+console:
+  level: INFO
+  format: "%(message)s"
+
+# ROS logging settings
+ros:
+  topic: "logging_messages"
+  node_name: "logging_node"
