@@ -1,76 +1,21 @@
 cmake_minimum_required(VERSION 3.8)
 project(pollibee_drone_simulation)
 
-# Use C++17
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# Find required packages
+# Find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
+find_package(rclpy REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(gazebo_ros_pkgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(image_transport REQUIRED)
-find_package(OpenCV REQUIRED)
 
-# Find YOLO (assuming it's installed in a standard location)
-find_package(YOLO REQUIRED)
-
-# Declare the drone control executable
-add_executable(control_drone src/control_drone.cpp)
-ament_target_dependencies(control_drone rclcpp std_msgs geometry_msgs)
-
-# Declare the YOLO detection executable
-add_executable(yolo_detection src/yolo_detection.cpp)
-ament_target_dependencies(yolo_detection rclcpp sensor_msgs cv_bridge image_transport)
-target_link_libraries(yolo_detection ${OpenCV_LIBS} ${YOLO_LIBRARIES})
-
-# Declare the pollination motor executable
-add_executable(pollination_motor src/pollination_motor.cpp)
-ament_target_dependencies(pollination_motor rclcpp std_msgs)
-
-# Declare the visualization executable
-add_executable(visualize_results src/visualize_results.cpp)
-ament_target_dependencies(visualize_results rclcpp sensor_msgs cv_bridge image_transport)
-target_link_libraries(visualize_results ${OpenCV_LIBS})
-
-# Declare the data logging executable
-add_executable(data_logging src/data_logging.cpp)
-ament_target_dependencies(data_logging rclcpp std_msgs)
-
-add_executable(obstacle_avoidance scripts/obstacle_avoidance.py)
-
-add_executable(wind_simulation scripts/wind_simulation.py)
-
-add_executable(path_planning scripts/path_planning.py)
-add_executable(trajectory_follower scripts/trajectory_follower.py)
-add_executable(flower_detection scripts/flower_detection.py)
-add_executable(pollination_control scripts/pollination_control.py)
-# Gazebo plugin
-add_library(gazebo_plugin SHARED plugins/gazebo/gazebo_plugin.cpp)
-ament_target_dependencies(gazebo_plugin rclcpp gazebo_ros_pkgs)
-
-# ROS plugin
-add_library(ros_plugin SHARED plugins/ros/ros_plugin.cpp)
-ament_target_dependencies(ros_plugin rclcpp)
-
-# RViz plugin
-add_library(rviz_plugin SHARED plugins/rviz/rviz_plugin.cpp)
-ament_target_dependencies(rviz_plugin rclcpp rviz_common)
-
-# Install executables and libraries
-install(TARGETS
-  control_drone
-  yolo_detection
-  pollination_motor
-  visualize_results
-  data_logging
-  gazebo_plugin
-  ros_plugin
-  rviz_plugin
+# Install Python scripts
+install(PROGRAMS
+  scripts/control_drone.py
+  scripts/data_logging.py
+  scripts/pollination_motor.py
+  scripts/visualize_results.py
+  scripts/yolo_detection.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -80,36 +25,16 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}/
 )
 
-# Install config files
+# Install models
 install(DIRECTORY
-  config
+  models
   DESTINATION share/${PROJECT_NAME}/
 )
 
 # Install world files
 install(DIRECTORY
-  worlds
+  world
   DESTINATION share/${PROJECT_NAME}/
 )
 
 ament_package()
-
-catkin_install_python(PROGRAMS
-  scripts/yolo_detection.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-
-catkin_install_python(PROGRAMS
-  scripts/pollination_planner.py
-  scripts/drone_controller.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-
-catkin_install_python(PROGRAMS
-  scripts/pollination_planner.py
-  scripts/drone_controller.py
-  scripts/yolo_detector.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
