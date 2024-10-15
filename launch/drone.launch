@@ -12,5 +12,13 @@
     <param name="position_tolerance" value="0.1"/>
   </node>
 
+<node name="yolo_detector" pkg="pollibee_drone_simulation" type="yolo_detector.py" output="screen">
+    <param name="yolo_config" value="$(find pollibee_drone_simulation)/config/yolov3.cfg"/>
+    <param name="yolo_weights" value="$(find pollibee_drone_simulation)/config/yolov3.weights"/>
+    <param name="yolo_classes" value="$(find pollibee_drone_simulation)/config/coco.names"/>
+    <param name="confidence_threshold" value="0.5"/>
+    <param name="nms_threshold" value="0.4"/>
+  </node>
+
   <!-- Alte noduri și parametri -->
 </launch>
