@@ -46,7 +46,7 @@ add_executable(obstacle_avoidance scripts/obstacle_avoidance.py)
 add_executable(wind_simulation scripts/wind_simulation.py)
 
 add_executable(path_planning scripts/path_planning.py)
-
+add_executable(trajectory_follower scripts/trajectory_follower.py)
 # Gazebo plugin
 add_library(gazebo_plugin SHARED plugins/gazebo/gazebo_plugin.cpp)
 ament_target_dependencies(gazebo_plugin rclcpp gazebo_ros_pkgs)
