@@ -1,89 +1,53 @@
-# File: launch/drone_simulation.launch.py
-
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from ament_index_python.packages import get_package_share_directory
+from launch.substitutions import FindExecutable
+from launch_ros.substitutions import FindPackageShare
+from launch.actions import ExecuteProcess
 import os
 
 def generate_launch_description():
-    pkg_dir = get_package_share_directory('pollibee_drone_simulation')
-
-    # Declare launch arguments
-    use_sim_time = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value='true',
-        description='Use simulation (Gazebo) clock if true'
-    )
-
-    world_file = DeclareLaunchArgument(
-        'world_file',
-        default_value=os.path.join(pkg_dir, 'worlds', 'greenhouse.world'),
-        description='Full path to the Gazebo world file to simulate'
-    )
-
-    # Include Gazebo launch file
-    gazebo = IncludeLaunchDescription(
-        os.path.join(get_package_share_directory('gazebo_ros'), 'launch', 'gazebo.launch.py'),
-        launch_arguments={
-            'world': LaunchConfiguration('world_file'),
-            'use_sim_time': LaunchConfiguration('use_sim_time')
-        }.items()
-    )
-
-    # Launch drone control node
-    drone_control = Node(
-        package='pollibee_drone_simulation',
-        executable='control_drone',
-        name='drone_controller',
-        output='screen',
-        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}]
-    )
-
-    # Launch YOLO detection node
-    yolo_detection = Node(
-        package='pollibee_drone_simulation',
-        executable='yolo_detection',
-        name='yolo_detector',
-        output='screen',
-        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}]
-    )
-
-    # Launch pollination motor node
-    pollination_motor = Node(
-        package='pollibee_drone_simulation',
-        executable='pollination_motor',
-        name='pollinator',
-        output='screen',
-        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}]
-    )
-
-    # Launch visualization node
-    visualize_results = Node(
-        package='pollibee_drone_simulation',
-        executable='visualize_results',
-        name='visualizer',
-        output='screen',
-        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}]
-    )
-
-    # Launch data logging node
-    data_logging = Node(
-        package='pollibee_drone_simulation',
-        executable='data_logging',
-        name='data_logger',
-        output='screen',
-        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}]
-    )
-
+    package_name = 'pollibee_drone_simulation'
+    
     return LaunchDescription([
-        use_sim_time,
-        world_file,
-        gazebo,
-        drone_control,
-        yolo_detection,
-        pollination_motor,
-        visualize_results,
-        data_logging
+        Node(
+            package=package_name,
+            executable='pollination_planner.py',
+            name='pollination_planner',
+            output='screen',
+            parameters=[
+                {'field_size': [10, 10, 2]},
+                {'grid_size': 1.0},
+                {'hover_height': 1.5}
+            ]
+        ),
+        Node(
+            package=package_name,
+            executable='drone_controller.py',
+            name='drone_controller',
+            output='screen',
+            parameters=[
+                {'max_velocity': 1.0},
+                {'position_tolerance': 0.1}
+            ]
+        ),
+        Node(
+            package=package_name,
+            executable='flower_detection.py',
+            name='flower_detection',
+            output='screen'
+        ),
+        Node(
+            package=package_name,
+            executable='yolo_detector.py',
+            name='yolo_detector',
+            output='screen',
+            parameters=[
+                {'yolo_config': FindPackageShare(package=package_name).find(package_name) + '/config/yolov3.cfg'},
+                {'yolo_weights': FindPackageShare(package=package_name).find(package_name) + '/config/yolov3.weights'},
+                {'yolo_classes': FindPackageShare(package=package_name).find(package_name) + '/config/coco.names'},
+                {'confidence_threshold': 0.5},
+                {'nms_threshold': 0.4}
+            ]
+        ),
+        # Adaugă restul nodurilor în mod similar
     ])
