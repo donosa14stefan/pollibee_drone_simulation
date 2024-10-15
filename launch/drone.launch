@@ -11,6 +11,8 @@
     <param name="max_velocity" value="1.0"/>
     <param name="position_tolerance" value="0.1"/>
   </node>
+<node pkg="pollibee_drone_simulation" type="flower_detection.py" name="flower_detection" output="screen">
+</node>
 
 <node name="yolo_detector" pkg="pollibee_drone_simulation" type="yolo_detector.py" output="screen">
     <param name="yolo_config" value="$(find pollibee_drone_simulation)/config/yolov3.cfg"/>
