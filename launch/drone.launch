@@ -28,5 +28,10 @@
     <param name="classes_file" value="$(find pollibee_drone_simulation)/models/coco.names"/>
 </node>
 
+<node pkg="pollibee_drone_simulation" type="control_drone.py" name="drone_controller" output="screen">
+    <param name="max_speed" value="0.5"/>
+    <param name="min_distance" value="1.0"/>
+</node>
+
   <!-- Alte noduri și parametri -->
 </launch>
