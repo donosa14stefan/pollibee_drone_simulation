@@ -1,74 +1,87 @@
-cmake_minimum_required(VERSION 3.5)
-
+cmake_minimum_required(VERSION 3.8)
 project(pollibee_drone_simulation)
 
-# Set the ROS 2 version
-set(ROS2_VERSION "humble")
+# Use C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find the ROS 2 package
-find_package(ros2 ${ROS2_VERSION} REQUIRED)
+# Find required packages
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(gazebo_ros_pkgs REQUIRED)
+find_package(cv_bridge REQUIRED)
+find_package(image_transport REQUIRED)
+find_package(OpenCV REQUIRED)
 
-# Include the ROS 2 CMake module
-include(${ros2_CMAKE_MODULE_PATH}/ros2.cmake)
+# Find YOLO (assuming it's installed in a standard location)
+find_package(YOLO REQUIRED)
 
-# Set the Gazebo version
-set(GAZEBO_VERSION "11.10.0")
+# Declare the drone control executable
+add_executable(control_drone src/control_drone.cpp)
+ament_target_dependencies(control_drone rclcpp std_msgs geometry_msgs)
 
-# Find the Gazebo package
-find_package(gazebo ${GAZEBO_VERSION} REQUIRED)
+# Declare the YOLO detection executable
+add_executable(yolo_detection src/yolo_detection.cpp)
+ament_target_dependencies(yolo_detection rclcpp sensor_msgs cv_bridge image_transport)
+target_link_libraries(yolo_detection ${OpenCV_LIBS} ${YOLO_LIBRARIES})
 
-# Include the Gazebo CMake module
-include(${gazebo_CMAKE_MODULE_PATH}/gazebo.cmake)
+# Declare the pollination motor executable
+add_executable(pollination_motor src/pollination_motor.cpp)
+ament_target_dependencies(pollination_motor rclcpp std_msgs)
 
-# Set the YOLO version
-set(YOLO_VERSION "11")
+# Declare the visualization executable
+add_executable(visualize_results src/visualize_results.cpp)
+ament_target_dependencies(visualize_results rclcpp sensor_msgs cv_bridge image_transport)
+target_link_libraries(visualize_results ${OpenCV_LIBS})
 
-# Find the YOLO package
-find_package(yolo ${YOLO_VERSION} REQUIRED)
+# Declare the data logging executable
+add_executable(data_logging src/data_logging.cpp)
+ament_target_dependencies(data_logging rclcpp std_msgs)
 
-# Include the YOLO CMake module
-include(${yolo_CMAKE_MODULE_PATH}/yolo.cmake)
-
-# Add the executable for the drone control script
-add_executable(control_drone scripts/control_drone.py)
-
-# Add the executable for the YOLO detection script
-add_executable(yolo_detection scripts/yolo_detection.py)
-
-# Add the executable for the pollination motor script
-add_executable(pollination_motor scripts/pollination_motor.py)
-
-# Add the executable for the visualization script
-add_executable(visualize_results scripts/visualize_results.py)
-
-# Add the executable for the data logging script
-add_executable(data_logging scripts/data_logging.py)
-
-# Add the plugin for Gazebo
+# Gazebo plugin
 add_library(gazebo_plugin SHARED plugins/gazebo/gazebo_plugin.cpp)
-target_link_libraries(gazebo_plugin ${GAZEBO_LIBRARIES})
+ament_target_dependencies(gazebo_plugin rclcpp gazebo_ros_pkgs)
 
-# Add the plugin for ROS
+# ROS plugin
 add_library(ros_plugin SHARED plugins/ros/ros_plugin.cpp)
-target_link_libraries(ros_plugin ${ROS2_LIBRARIES})
+ament_target_dependencies(ros_plugin rclcpp)
 
-# Add the plugin for RViz
+# RViz plugin
 add_library(rviz_plugin SHARED plugins/rviz/rviz_plugin.cpp)
-target_link_libraries(rviz_plugin ${RVIZ_LIBRARIES})
+ament_target_dependencies(rviz_plugin rclcpp rviz_common)
 
-# Add the plugin for YOLO
-add_library(yolo_plugin SHARED plugins/yolo/yolo_plugin.cpp)
-target_link_libraries(yolo_plugin ${YOLO_LIBRARIES})
+# Install executables and libraries
+install(TARGETS
+  control_drone
+  yolo_detection
+  pollination_motor
+  visualize_results
+  data_logging
+  gazebo_plugin
+  ros_plugin
+  rviz_plugin
+  DESTINATION lib/${PROJECT_NAME}
+)
 
-# Add the plugin for Python
-add_library(python_plugin SHARED plugins/python/python_plugin.cpp)
-target_link_libraries(python_plugin ${PYTHON_LIBRARIES})
+# Install launch files
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
+)
 
-# Set the installation directory
-set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME})
+# Install config files
+install(DIRECTORY
+  config
+  DESTINATION share/${PROJECT_NAME}/
+)
 
-# Install the executables and plugins
-install(TARGETS control_drone yolo_detection pollination_motor visualize_results data_logging
-        RUNTIME DESTINATION ${INSTALL_DIR})
-install(TARGETS gazebo_plugin ros_plugin rviz_plugin yolo_plugin python_plugin
-        LIBRARY DESTINATION ${INSTALL_DIR})
+# Install world files
+install(DIRECTORY
+  worlds
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+ament_package()
