@@ -1,0 +1,41 @@
+# Parametrii de simulare
+
+# Setări generale
+general:
+  simulation_name: "Simulare YOLO"
+  simulation_description: "Simulare a detecției obiectelor cu YOLO"
+
+# Setări de mediu
+environment:
+  world_name: "world"
+  world_description: "Lumea de simulare"
+
+# Setări de cameră
+camera:
+  camera_name: "camera"
+  camera_description: "Camera de simulare"
+  camera_width: 640
+  camera_height: 480
+  camera_fov: 60
+
+# Setări de obiecte
+objects:
+  object_name: "obiect"
+  object_description: "Obiectul de simulare"
+  object_type: "person"
+
+# Setări de mișcare
+motion:
+  motion_type: "linear"
+  motion_speed: 1.0
+
+# Setări de detecție
+detection:
+  detection_threshold: 0.5
+  detection_confidence: 0.5
+  detection_nms_threshold: 0.4
+
+# Setări de ROS
+ros:
+  topic: "image_with_detections"
+  node_name: "simulation_node"
