@@ -2,58 +2,68 @@
 
 import rospy
 import csv
+from std_msgs.msg import Bool
+from geometry_msgs.msg import Pose
 from sensor_msgs.msg import Image
-from geometry_msgs.msg import Twist
+from cv_bridge import CvBridge
 
 class DataLogger:
     def __init__(self):
-        self.node_name = "data_logger"
-        rospy.init_node(self.node_name)
-        self.rate = rospy.Rate(10)  # 10 Hz
-
-        # Subscribers
-        self.image_sub = rospy.Subscriber("yolo_detections", Image, self.image_callback)
-        self.twist_sub = rospy.Subscriber("cmd_vel", Twist, self.twist_callback)
-
-        # CSV file setup
-        self.csv_file = open("data_log.csv", "w", newline="")
+        rospy.init_node('data_logger')
+        
+        # Parameters
+        self.log_file = rospy.get_param('~log_file', 'simulation_log.csv')
+        
+        # State variables
+        self.current_pose = None
+        self.pollination_count = 0
+        self.image_count = 0
+        
+        # CSV setup
+        self.csv_file = open(self.log_file, 'w')
         self.csv_writer = csv.writer(self.csv_file)
-                self.csv_writer.writerow(["Timestamp", "Image_Seq", "Linear_X", "Linear_Y", "Linear_Z", "Angular_Z"])
+        self.csv_writer.writerow(['Timestamp', 'X', 'Y', 'Z', 'Pollination_Count', 'Image_Count'])
+        
+        # Subscribers
+        rospy.Subscriber('drone_pose', Pose, self.pose_callback)
+        rospy.Subscriber('pollination_motor_state', Bool, self.pollination_callback)
+        rospy.Subscriber('camera/image_raw', Image, self.image_callback)
+        
+        self.rate = rospy.Rate(1)  # 1 Hz logging
+        rospy.loginfo("Data Logger initialized")
 
-        # Data storage
-        self.latest_image_seq = None
-        self.latest_twist = None
+    def pose_callback(self, msg):
+        self.current_pose = msg
 
-    def image_callback(self, image_msg):
-        self.latest_image_seq = image_msg.header.seq
-        self.log_data()
+    def pollination_callback(self, msg):
+        if msg.data:
+            self.pollination_count += 1
 
-    def twist_callback(self, twist_msg):
-        self.latest_twist = twist_msg
-        self.log_data()
+    def image_callback(self, msg):
+        self.image_count += 1
 
     def log_data(self):
-        if self.latest_image_seq is not None and self.latest_twist is not None:
-            timestamp = rospy.Time.now().to_sec()
+        if self.current_pose is not None:
+            timestamp = rospy.get_time()
             self.csv_writer.writerow([
                 timestamp,
-                self.latest_image_seq,
-                self.latest_twist.linear.x,
-                self.latest_twist.linear.y,
-                self.latest_twist.linear.z,
-                self.latest_twist.angular.z
+                self.current_pose.position.x,
+                self.current_pose.position.y,
+                self.current_pose.position.z,
+                self.pollination_count,
+                self.image_count
             ])
-            self.csv_file.flush()  # Ensure data is written to file immediately
 
     def run(self):
-        rospy.loginfo("Data logger started")
         while not rospy.is_shutdown():
+            self.log_data()
             self.rate.sleep()
 
     def __del__(self):
         self.csv_file.close()
+        rospy.loginfo("Data logging completed. File saved: {}".format(self.log_file))
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     try:
         logger = DataLogger()
         logger.run()
