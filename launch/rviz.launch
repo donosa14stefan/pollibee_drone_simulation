@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Importă fișierul de configurare pentru RViz -->
+  <arg name="rviz_config" default="$(find pollibee_drone_simulation)/config/rviz_config.yaml"/>
+  <include file="$(find pollibee_drone_simulation)/launch/rviz.launch">
+    <arg name="config" value="$(arg rviz_config)"/>
+  </include>
+
+  <!-- Lansarea nodului de vizualizare RViz -->
+  <node pkg="rviz" type="rviz" name="rviz" output="screen">
+    <param name="config" value="$(arg rviz_config)"/>
+  </node>
+
+  <!-- Lansarea nodului de vizualizare a rezultatelor -->
+  <node pkg="pollibee_drone_simulation" type="visualize_results.py" name="visualize_results" output="screen">
+    <param name="rviz_config" value="$(arg rviz_config)"/>
+  </node>
+</launch>
