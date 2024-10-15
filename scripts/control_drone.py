@@ -94,6 +94,49 @@ class DroneController:
         cmd_vel.angular.z = 0.1  # Slow rotation to scan the area
         
         self.cmd_vel_pub.publish(cmd_vel)
+from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import Bool
+
+class DroneController:
+    def __init__(self):
+        # ... (codul existent)
+        self.flower_sub = rospy.Subscriber('flower_detections', PoseStamped, self.flower_callback)
+        self.pollinate_pub = rospy.Publisher('pollinate', Bool, queue_size=10)
+        self.current_target = None
+
+    def flower_callback(self, msg):
+        self.current_target = msg.pose
+
+    def run(self):
+        while not rospy.is_shutdown():
+            if self.current_target:
+                # Calculați comanda de viteză pentru a se deplasa către floare
+                cmd_vel = self.calculate_velocity_command(self.current_target)
+                self.cmd_vel_pub.publish(cmd_vel)
+
+                # Verificați dacă drona este suficient de aproape de floare pentru polenizare
+                if self.is_close_to_target(self.current_target):
+                    self.pollinate()
+
+            self.rate.sleep()
+
+    def calculate_velocity_command(self, target):
+        # Implementați logica pentru calculul comenzii de viteză
+        # Aceasta ar trebui să ghideze drona către poziția țintă
+        cmd_vel = Twist()
+        # ... calculul vitezelor liniare și unghiulare
+        return cmd_vel
+
+    def is_close_to_target(self, target):
+        # Verificați dacă drona este suficient de aproape de țintă
+        # Returnați True dacă este aproape, False în caz contrar
+        return False  # Implementați logica proprie
+
+    def pollinate(self):
+        pollinate_msg = Bool()
+        pollinate_msg.data = True
+        self.pollinate_pub.publish(pollinate_msg)
+        rospy.loginfo("Pollinating flower!")
 
 if __name__ == '__main__':
     try:
