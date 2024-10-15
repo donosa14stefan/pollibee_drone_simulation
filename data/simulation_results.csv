@@ -1,0 +1,6 @@
+"Simulation ID","Object Type","Detection Confidence","Detection Threshold","Detection Time (ms)","Image Width","Image Height"
+"1","person",0.8,0.5,30,640,480
+"2","person",0.9,0.5,25,640,480
+"3","person",0.7,0.5,35,640,480
+"4","person",0.85,0.5,28,640,480
+"5","person",0.92,0.5,22,640,480
