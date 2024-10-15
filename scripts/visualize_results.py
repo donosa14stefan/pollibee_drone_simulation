@@ -1,46 +1,70 @@
 #!/usr/bin/env python3
 
 import rospy
-import cv2
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge, CvBridgeError
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from geometry_msgs.msg import Pose
+from std_msgs.msg import Float32MultiArray
 
 class Visualizer:
     def __init__(self):
-        self.node_name = "visualizer"
-        rospy.init_node(self.node_name)
-        self.rate = rospy.Rate(10)  # 10 Hz
-
-        # Initialize CV Bridge
-        self.bridge = CvBridge()
-
+        rospy.init_node('visualizer')
+        
+        # State variables
+        self.drone_positions = []
+        self.plant_positions = []
+        
+        # Set up the plot
+        self.fig = plt.figure(figsize=(10, 8))
+        self.ax = self.fig.add_subplot(111, projection='3d')
+        self.ax.set_xlabel('X')
+        self.ax.set_ylabel('Y')
+        self.ax.set_zlabel('Z')
+        self.ax.set_title('Drone Simulation Visualization')
+        
         # Subscribers
-        self.image_sub = rospy.Subscriber("yolo_detections", Image, self.image_callback)
+        rospy.Subscriber('drone_pose', Pose, self.drone_pose_callback)
+        rospy.Subscriber('plant_detections', Float32MultiArray, self.plant_detection_callback)
+        
+        self.rate = rospy.Rate(10)  # 10 Hz
+        rospy.loginfo("Visualizer initialized")
 
-        # OpenCV window
-        cv2.namedWindow("Pollibee Drone Simulation", cv2.WINDOW_NORMAL)
+    def drone_pose_callback(self, msg):
+        self.drone_positions.append([msg.position.x, msg.position.y, msg.position.z])
+        if len(self.drone_positions) > 100:  # Keep only last 100 positions
+            self.drone_positions.pop(0)
 
-    def image_callback(self, image_msg):
-        try:
-            # Convert ROS Image message to OpenCV image
-            cv_image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
+    def plant_detection_callback(self, msg):
+        self.plant_positions = np.array(msg.data).reshape(-1, 5)[:, :3]  # Keep only x, y, z
 
-            # Display image
-            cv2.imshow("Pollibee Drone Simulation", cv_image)
-            cv2.waitKey(1)
+        def update_plot(self):
+        self.ax.clear()
+        self.ax.set_xlabel('X')
+        self.ax.set_ylabel('Y')
+        self.ax.set_zlabel('Z')
+        self.ax.set_title('Drone Simulation Visualization')
+        
+        # Plot drone path
+        if self.drone_positions:
+            drone_path = np.array(self.drone_positions)
+            self.ax.plot(drone_path[:, 0], drone_path[:, 1], drone_path[:, 2], 'b-', label='Drone Path')
+            self.ax.scatter(drone_path[-1, 0], drone_path[-1, 1], drone_path[-1, 2], c='r', s=100, marker='o', label='Current Position')
 
-        except CvBridgeError as e:
-            rospy.logerr("CvBridge Error: {0}".format(e))
+        # Plot plant positions
+        if len(self.plant_positions) > 0:
+            self.ax.scatter(self.plant_positions[:, 0], self.plant_positions[:, 1], self.plant_positions[:, 2], c='g', marker='^', label='Plants')
+
+        self.ax.legend()
+        plt.draw()
+        plt.pause(0.001)
 
     def run(self):
-        rospy.loginfo("Visualizer started")
         while not rospy.is_shutdown():
+            self.update_plot()
             self.rate.sleep()
 
-    def __del__(self):
-        cv2.destroyAllWindows()
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     try:
         visualizer = Visualizer()
         visualizer.run()
