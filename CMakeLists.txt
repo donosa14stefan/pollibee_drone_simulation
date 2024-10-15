@@ -85,3 +85,8 @@ install(DIRECTORY
 )
 
 ament_package()
+
+catkin_install_python(PROGRAMS
+  scripts/yolo_detection.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
