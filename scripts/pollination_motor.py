@@ -1,48 +1,57 @@
 #!/usr/bin/env python3
 
 import rospy
-from std_msgs.msg import Float64
+from std_msgs.msg import Bool
 from geometry_msgs.msg import Twist
 
-class PollinatorMotor:
+class PollinationMotor:
     def __init__(self):
-        self.node_name = "pollinator_motor"
-        rospy.init_node(self.node_name)
-        self.rate = rospy.Rate(10)  # 10 Hz
-
+        rospy.init_node('pollination_motor')
+        
+        # Parameters
+        self.pollination_duration = rospy.get_param('~pollination_duration', 2.0)
+        
+        # State variables
+        self.is_pollinating = False
+        
         # Publishers
-        self.motor_cmd_pub = rospy.Publisher("motor_cmd", Float64, queue_size=10)
-
+        self.motor_state_pub = rospy.Publisher('pollination_motor_state', Bool, queue_size=10)
+        
         # Subscribers
-        self.twist_sub = rospy.Subscriber("cmd_vel", Twist, self.twist_callback)
+        rospy.Subscriber('cmd_vel', Twist, self.cmd_vel_callback)
+        
+        self.rate = rospy.Rate(10)  # 10 Hz
+        rospy.loginfo("Pollination Motor initialized")
 
-        # Initialize motor command
-        self.motor_cmd = Float64()
+    def cmd_vel_callback(self, msg):
+        # Check if the drone has stopped (assuming it's near a plant)
+        if abs(msg.linear.x) < 0.01 and abs(msg.linear.y) < 0.01 and abs(msg.linear.z) < 0.01:
+            if not self.is_pollinating:
+                self.start_pollination()
+        else:
+            self.stop_pollination()
 
-        # Motor parameters
-        self.max_motor_speed = 100.0  # Maximum motor speed
-        self.speed_factor = 0.5  # Factor to convert linear velocity to motor speed
+    def start_pollination(self):
+        self.is_pollinating = True
+        self.motor_state_pub.publish(Bool(True))
+        rospy.loginfo("Starting pollination")
+        rospy.Timer(rospy.Duration(self.pollination_duration), self.stop_pollination, oneshot=True)
 
-    def twist_callback(self, twist_msg):
-        # Map twist message to motor command
-        linear_speed = (abs(twist_msg.linear.x) + abs(twist_msg.linear.y) + abs(twist_msg.linear.z)) / 3
-        motor_speed = linear_speed * self.speed_factor * self.max_motor_speed
-
-        # Ensure motor speed is within limits
-        self.motor_cmd.data = max(0, min(motor_speed, self.max_motor_speed))
-
-        # Publish motor command
-        self.motor_cmd_pub.publish(self.motor_cmd)
+    def stop_pollination(self, event=None):
+        if self.is_pollinating:
+            self.is_pollinating = False
+            self.motor_state_pub.publish(Bool(False))
+            rospy.loginfo("Stopping pollination")
 
     def run(self):
-        rospy.loginfo("Pollinator motor controller started")
         while not rospy.is_shutdown():
-            # You can add any continuous control logic here if needed
+            # Publish current motor state
+            self.motor_state_pub.publish(Bool(self.is_pollinating))
             self.rate.sleep()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     try:
-        motor = PollinatorMotor()
+        motor = PollinationMotor()
         motor.run()
     except rospy.ROSInterruptException:
         pass
