@@ -1,0 +1,7 @@
+<launch>
+  <node name="drone_controller" pkg="pollibee_drone_simulation" type="control_drone.py" output="screen">
+    <param name="linear_speed" value="0.5" />
+    <param name="angular_speed" value="1.0" />
+    <param name="goal_tolerance" value="0.1" />
+  </node>
+</launch>
