@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Importă fișierul de configurare pentru ROS 2 -->
+  <arg name="ros2_config" default="$(find pollibee_drone_simulation)/config/ros2_config.yaml"/>
+  <include file="$(find pollibee_drone_simulation)/launch/ros2.launch">
+    <arg name="config" value="$(arg ros2_config)"/>
+  </include>
+
+  <!-- Importă fișierul de configurare pentru Gazebo -->
+  <arg name="gazebo_config" default="$(find pollibee_drone_simulation)/config/gazebo_config.yaml"/>
+  <include file="$(find pollibee_drone_simulation)/launch/gazebo.launch">
+    <arg name="config" value="$(arg gazebo_config)"/>
+  </include>
+
+  <!-- Importă fișierul de configurare pentru YOLO -->
+  <arg name="yolo_config" default="$(find pollibee_drone_simulation)/config/yolo_config.yaml"/>
+  <include file="$(find pollibee_drone_simulation)/launch/yolo.launch">
+    <arg name="config" value="$(arg yolo_config)"/>
+  </include>
+
+  <!-- Lansarea nodului de control al dronei -->
+  <node pkg="pollibee_drone_simulation" type="control_drone.py" name="control_drone" output="screen">
+    <param name="ros2_config" value="$(arg ros2_config)"/>
+    <param name="gazebo_config" value="$(arg gazebo_config)"/>
+  </node>
+
+  <!-- Lansarea nodului de detecție a obiectelor cu YOLO -->
+  <node pkg="pollibee_drone_simulation" type="yolo_detection.py" name="yolo_detection" output="screen">
+    <param name="yolo_config" value="$(arg yolo_config)"/>
+  </node>
+
+  <!-- Lansarea nodului de motor de polenizare -->
+  <node pkg="pollibee_drone_simulation" type="pollination_motor.py" name="pollination_motor" output="screen">
+    <param name="ros2_config" value="$(arg ros2_config)"/>
+    <param name="gazebo_config" value="$(arg gazebo_config)"/>
+  </node>
+
+  <!-- Lansarea nodului de vizualizare a rezultatelor -->
+  <node pkg="pollibee_drone_simulation" type="visualize_results.py" name="visualize_results" output="screen">
+    <param name="ros2_config" value="$(arg ros2_config)"/>
+    <param name="gazebo_config" value="$(arg gazebo_config)"/>
+  </node>
+
+  <!-- Lansarea nodului de logare a datelor -->
+  <node pkg="pollibee_drone_simulation" type="data_logging.py" name="data_logging" output="screen">
+    <param name="ros2_config" value="$(arg ros2_config)"/>
+    <param name="gazebo_config" value="$(arg gazebo_config)"/>
+  </node>
+</launch>
