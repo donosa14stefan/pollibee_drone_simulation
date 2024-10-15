@@ -38,5 +38,6 @@
 <node pkg="pollibee_drone_simulation" type="data_logging.py" name="data_logger" output="screen">
     <param name="log_file" value="$(find pollibee_drone_simulation)/data/simulation_log.csv"/>
 </node>
+<node pkg="pollibee_drone_simulation" type="visualize_results.py" name="visualizer" output="screen"/>
   <!-- Alte noduri și parametri -->
 </launch>
