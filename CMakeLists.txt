@@ -41,6 +41,8 @@ target_link_libraries(visualize_results ${OpenCV_LIBS})
 add_executable(data_logging src/data_logging.cpp)
 ament_target_dependencies(data_logging rclcpp std_msgs)
 
+add_executable(obstacle_avoidance scripts/obstacle_avoidance.py)
+
 # Gazebo plugin
 add_library(gazebo_plugin SHARED plugins/gazebo/gazebo_plugin.cpp)
 ament_target_dependencies(gazebo_plugin rclcpp gazebo_ros_pkgs)
