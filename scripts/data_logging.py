@@ -2,70 +2,69 @@
 
 import rospy
 import csv
+import matplotlib.pyplot as plt
+from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import Bool
-from geometry_msgs.msg import Pose
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
 
 class DataLogger:
     def __init__(self):
         rospy.init_node('data_logger')
         
-        # Parameters
-        self.log_file = rospy.get_param('~log_file', 'simulation_log.csv')
+        self.pose_sub = rospy.Subscriber('drone_pose', PoseStamped, self.pose_callback)
+        self.pollination_sub = rospy.Subscriber('pollinate', Bool, self.pollination_callback)
         
-        # State variables
-        self.current_pose = None
-        self.pollination_count = 0
-        self.image_count = 0
+        self.log_file = open('pollination_log.csv', 'w', newline='')
+        self.csv_writer = csv.writer(self.log_file)
+        self.csv_writer.writerow(['Timestamp', 'X', 'Y', 'Z', 'Pollination'])
         
-        # CSV setup
-        self.csv_file = open(self.log_file, 'w')
-        self.csv_writer = csv.writer(self.csv_file)
-        self.csv_writer.writerow(['Timestamp', 'X', 'Y', 'Z', 'Pollination_Count', 'Image_Count'])
+        self.poses = []
+        self.pollinations = []
         
-        # Subscribers
-        rospy.Subscriber('drone_pose', Pose, self.pose_callback)
-        rospy.Subscriber('pollination_motor_state', Bool, self.pollination_callback)
-        rospy.Subscriber('camera/image_raw', Image, self.image_callback)
+        rospy.on_shutdown(self.shutdown_hook)
         
-        self.rate = rospy.Rate(1)  # 1 Hz logging
-        rospy.loginfo("Data Logger initialized")
-
     def pose_callback(self, msg):
-        self.current_pose = msg
-
+        pose = msg.pose.position
+        timestamp = msg.header.stamp.to_sec()
+        self.csv_writer.writerow([timestamp, pose.x, pose.y, pose.z, ''])
+        self.poses.append((timestamp, pose.x, pose.y, pose.z))
+        
     def pollination_callback(self, msg):
         if msg.data:
-            self.pollination_count += 1
-
-    def image_callback(self, msg):
-        self.image_count += 1
-
-    def log_data(self):
-        if self.current_pose is not None:
-            timestamp = rospy.get_time()
-            self.csv_writer.writerow([
-                timestamp,
-                self.current_pose.position.x,
-                self.current_pose.position.y,
-                self.current_pose.position.z,
-                self.pollination_count,
-                self.image_count
-            ])
-
-    def run(self):
-        while not rospy.is_shutdown():
-            self.log_data()
-            self.rate.sleep()
-
-    def __del__(self):
-        self.csv_file.close()
-        rospy.loginfo("Data logging completed. File saved: {}".format(self.log_file))
+            timestamp = rospy.Time.now().to_sec()
+            self.csv_writer.writerow([timestamp, '', '', '', 'Pollination'])
+            self.pollinations.append(timestamp)
+            
+    def shutdown_hook(self):
+        self.log_file.close()
+        self.visualize_data()
+        
+    def visualize_data(self):
+        timestamps, x, y, z = zip(*self.poses)
+        
+        fig = plt.figure(figsize=(12, 8))
+        ax = fig.add_subplot(111, projection='3d')
+        
+        # Plot drone trajectory
+        ax.plot(x, y, z, label='Drone Trajectory')
+        
+        # Plot pollination events
+        pollination_x = [x[timestamps.index(p)] for p in self.pollinations]
+        pollination_y = [y[timestamps.index(p)] for p in self.pollinations]
+        pollination_z = [z[timestamps.index(p)] for p in self.pollinations]
+        ax.scatter(pollination_x, pollination_y, pollination_z, c='r', marker='*', s=100, label='Pollination Events')
+        
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        ax.set_title('Drone Trajectory and Pollination Events')
+        ax.legend()
+        
+        plt.savefig('pollination_visualization.png')
+        plt.show()
 
 if __name__ == '__main__':
     try:
         logger = DataLogger()
-        logger.run()
+        rospy.spin()
     except rospy.ROSInterruptException:
         pass
