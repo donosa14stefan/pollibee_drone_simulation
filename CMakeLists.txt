@@ -48,6 +48,7 @@ add_executable(wind_simulation scripts/wind_simulation.py)
 add_executable(path_planning scripts/path_planning.py)
 add_executable(trajectory_follower scripts/trajectory_follower.py)
 add_executable(flower_detection scripts/flower_detection.py)
+add_executable(pollination_control scripts/pollination_control.py)
 # Gazebo plugin
 add_library(gazebo_plugin SHARED plugins/gazebo/gazebo_plugin.cpp)
 ament_target_dependencies(gazebo_plugin rclcpp gazebo_ros_pkgs)
