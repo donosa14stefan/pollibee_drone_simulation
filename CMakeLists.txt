@@ -43,6 +43,8 @@ ament_target_dependencies(data_logging rclcpp std_msgs)
 
 add_executable(obstacle_avoidance scripts/obstacle_avoidance.py)
 
+add_executable(wind_simulation scripts/wind_simulation.py)
+
 # Gazebo plugin
 add_library(gazebo_plugin SHARED plugins/gazebo/gazebo_plugin.cpp)
 ament_target_dependencies(gazebo_plugin rclcpp gazebo_ros_pkgs)
