@@ -1,0 +1,30 @@
+# Performance metrics configuration file
+
+# Evaluation metrics
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "F1-score"
+    - "mean_average_precision"
+    - "mean_IOU"
+
+# Thresholds for evaluation metrics
+thresholds:
+  accuracy: 0.9
+  precision: 0.8
+  recall: 0.7
+  F1-score: 0.8
+  mean_average_precision: 0.7
+  mean_IOU: 0.6
+
+# Performance metrics calculation settings
+calculation:
+  batch_size: 32
+  num_workers: 4
+
+# Output settings
+output:
+  file_name: "performance_metrics.txt"
+  format: "csv"
