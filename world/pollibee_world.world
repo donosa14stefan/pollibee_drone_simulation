@@ -1,0 +1,101 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="pollibee_world">
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- Adăugăm o seră simplă -->
+    <model name="greenhouse">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="walls">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>10 10 3</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>10 10 3</size>
+            </box>
+          </geometry>
+                   <material>
+            <ambient>0.5 0.5 0.5 0.5</ambient>
+            <diffuse>0.5 0.5 0.5 0.5</diffuse>
+            <specular>0.1 0.1 0.1 0.1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Adăugăm câteva plante -->
+    <model name="plant1">
+      <static>true</static>
+      <pose>2 2 0 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.2</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.2</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0 0.5 0 1</ambient>
+            <diffuse>0 0.5 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="plant2">
+      <static>true</static>
+      <pose>-2 -2 0 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.2</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.2</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0 0.5 0 1</ambient>
+            <diffuse>0 0.5 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Setări de fizică -->
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+      <gravity>0 0 -9.8</gravity>
+    </physics>
+  </world>
+</sdf>
