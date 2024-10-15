@@ -1,0 +1,7 @@
+<launch>
+  <node name="yolo_detector" pkg="pollibee_drone_simulation" type="yolo_detection.py" output="screen">
+    <param name="yolo_config" value="$(find pollibee_drone_simulation)/config/yolov3.cfg" />
+    <param name="yolo_weights" value="$(find pollibee_drone_simulation)/config/yolov3.weights" />
+    <param name="yolo_classes" value="$(find pollibee_drone_simulation)/config/coco.names" />
+  </node>
+</launch>
