@@ -39,5 +39,10 @@
     <param name="log_file" value="$(find pollibee_drone_simulation)/data/simulation_log.csv"/>
 </node>
 <node pkg="pollibee_drone_simulation" type="visualize_results.py" name="visualizer" output="screen"/>
+<node pkg="pollibee_drone_simulation" type="wind_simulation.py" name="wind_simulation" output="screen">
+  <param name="wind_mean" value="[1.0, 0.0, 0.0]"/>
+  <param name="wind_variance" value="0.5"/>
+  <param name="update_rate" value="10"/>
+</node>
   <!-- Alte noduri și parametri -->
 </launch>
