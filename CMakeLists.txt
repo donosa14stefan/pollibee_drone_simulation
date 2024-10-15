@@ -97,3 +97,11 @@ catkin_install_python(PROGRAMS
   scripts/drone_controller.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+
+catkin_install_python(PROGRAMS
+  scripts/pollination_planner.py
+  scripts/drone_controller.py
+  scripts/yolo_detector.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
