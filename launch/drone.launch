@@ -47,5 +47,10 @@
   <param name="wind_variance" value="0.5"/>
   <param name="update_rate" value="10"/>
 </node>
+<node pkg="pollibee_drone_simulation" type="trajectory_follower.py" name="trajectory_follower" output="screen">
+  <param name="update_rate" value="10"/>
+  <param name="max_speed" value="1.0"/>
+  <param name="goal_tolerance" value="0.1"/>
+</node>
   <!-- Alte noduri și parametri -->
 </launch>
