@@ -110,7 +110,25 @@ class YOLODetector:
             cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
             cv2.putText(image, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         return image
+# În yolo_detection.py
 
+class YOLODetector:
+    def __init__(self):
+        # ... (codul existent)
+        self.flower_classes = ['flower', 'blossom', 'bloom']  # Adăugați clase relevante pentru flori
+
+    def image_callback(self, image_msg):
+        # ... (codul existent)
+
+        # După detecție, filtrați doar florile
+        flower_detections = [det for det in detections if self.classes[det[1]] in self.flower_classes]
+
+        # Publicați doar detecțiile de flori
+        self.publish_detections(flower_detections)
+
+    def publish_detections(self, detections):
+        # Implementați logica pentru publicarea detecțiilor de flori
+        # Puteți folosi un mesaj personalizat sau PoseArray pentru a publica pozițiile florilor
 if __name__ == '__main__':
     try:
         detector = YOLODetector()
