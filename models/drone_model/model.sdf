@@ -117,5 +117,14 @@
     <plugin name="rviz_plugin" filename="librviz_plugin.so">
       <ros2_node>visualize_results</ros2_node>
     </plugin>
+<plugin name="wind_plugin" filename="libgazebo_wind_plugin.so">
+  <frameId>base_link</frameId>
+  <linkName>base_link</linkName>
+  <robotNamespace/>
+  <windForceMean>1 0 0</windForceMean>
+  <windForceMax>3 3 3</windForceMax>
+  <windForceVariance>0.5 0.5 0.5</windForceVariance>
+  <windGustDuration>2</windGustDuration>
+</plugin>
   </model>
 </sdf>
