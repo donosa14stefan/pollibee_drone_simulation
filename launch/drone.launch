@@ -35,5 +35,8 @@
 <node pkg="pollibee_drone_simulation" type="pollination_motor.py" name="pollination_motor" output="screen">
     <param name="pollination_duration" value="2.0"/>
 </node>
+<node pkg="pollibee_drone_simulation" type="data_logging.py" name="data_logger" output="screen">
+    <param name="log_file" value="$(find pollibee_drone_simulation)/data/simulation_log.csv"/>
+</node>
   <!-- Alte noduri și parametri -->
 </launch>
