@@ -1,47 +1,52 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import rospy
-import numpy as np
 import csv
 from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
+from geometry_msgs.msg import Twist
 
 class DataLogger:
     def __init__(self):
         self.node_name = "data_logger"
+        rospy.init_node(self.node_name)
         self.rate = rospy.Rate(10)  # 10 Hz
 
         # Subscribers
-        self.image_sub = rospy.Subscriber("image_with_detections", Image, self.image_callback)
+        self.image_sub = rospy.Subscriber("yolo_detections", Image, self.image_callback)
+        self.twist_sub = rospy.Subscriber("cmd_vel", Twist, self.twist_callback)
 
-        # Create CvBridge object
-        self.bridge = CvBridge()
-
-        # Create CSV writer
+        # CSV file setup
         self.csv_file = open("data_log.csv", "w", newline="")
         self.csv_writer = csv.writer(self.csv_file)
+                self.csv_writer.writerow(["Timestamp", "Image_Seq", "Linear_X", "Linear_Y", "Linear_Z", "Angular_Z"])
+
+        # Data storage
+        self.latest_image_seq = None
+        self.latest_twist = None
 
     def image_callback(self, image_msg):
-        # Convert ROS image message to OpenCV image
-        cv_image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
+        self.latest_image_seq = image_msg.header.seq
+        self.log_data()
 
-        # Extract features from image (e.g. detection bounding boxes, class labels)
-        features = self.extract_features(cv_image)
+    def twist_callback(self, twist_msg):
+        self.latest_twist = twist_msg
+        self.log_data()
 
-        # Write features to CSV file
-        self.csv_writer.writerow(features)
-
-    def extract_features(self, cv_image):
-        # TO DO: implement feature extraction logic here
-        # For example, extract detection bounding boxes and class labels
-        features = []
-        # ...
-        return features
+    def log_data(self):
+        if self.latest_image_seq is not None and self.latest_twist is not None:
+            timestamp = rospy.Time.now().to_sec()
+            self.csv_writer.writerow([
+                timestamp,
+                self.latest_image_seq,
+                self.latest_twist.linear.x,
+                self.latest_twist.linear.y,
+                self.latest_twist.linear.z,
+                self.latest_twist.angular.z
+            ])
+            self.csv_file.flush()  # Ensure data is written to file immediately
 
     def run(self):
-        rospy.init_node(self.node_name)
         rospy.loginfo("Data logger started")
-
         while not rospy.is_shutdown():
             self.rate.sleep()
 
@@ -49,5 +54,8 @@ class DataLogger:
         self.csv_file.close()
 
 if __name__ == "__main__":
-    logger = DataLogger()
-    logger.run()
+    try:
+        logger = DataLogger()
+        logger.run()
+    except rospy.ROSInterruptException:
+        pass
