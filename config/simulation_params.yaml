@@ -64,3 +64,26 @@ logging:
   enabled: true
   frequency: 1  # Hz
   output_directory: "../data/simulation_results"
+physics:
+  gravity: -9.81  # m/s^2
+  time_step: 0.001  # seconds
+  update_rate: 1000  # Hz
+
+rendering:
+  resolution: [1280, 720]
+  quality: "high"
+  shadows: true
+  anti_aliasing: true
+
+logging:
+  enabled: true
+  level: "info"
+  file: "simulation_log.txt"
+
+performance:
+  multithreading: true
+  max_threads: 4
+
+scenario:
+  duration: 3600  # seconds
+  random_seed: 42
