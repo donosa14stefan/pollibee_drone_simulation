@@ -1,23 +1,24 @@
-#ifndef PYTHON_PLUGIN_H
-#define PYTHON_PLUGIN_H
+// File: plugins/python/python_plugin.h
+
+#ifndef POLLIBEE_PYTHON_PLUGIN_H
+#define POLLIBEE_PYTHON_PLUGIN_H
 
 #include <ros/ros.h>
 #include <ros/names.h>
 #include <boost/python.hpp>
 
-namespace python {
-class PythonPlugin : public ros::Node {
-public:
-  PythonPlugin();
-  virtual ~PythonPlugin();
+namespace python
+{
+  class PythonPlugin : public ros::Node
+  {
+    public: PythonPlugin();
+    public: virtual ~PythonPlugin();
 
-private:
-  ros::NodeHandle node_handle_;
-  boost::thread python_thread_;
+    private: ros::NodeHandle nodeHandle;
+    private: boost::thread pythonThread;
 
-  void runPython();
-};
+    private: void runPython();
+  };
+}
 
-PLUGINLIB_EXPORT_CLASS(python::PythonPlugin, ros::Node)
-
-#endif // PYTHON_PLUGIN_H
+#endif // POLLIBEE_PYTHON_PLUGIN_H
