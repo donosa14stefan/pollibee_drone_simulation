@@ -12,6 +12,7 @@ class WindSimulation:
         self.wind_mean = rospy.get_param('~wind_mean', [1.0, 0.0, 0.0])  # Mean wind vector [x, y, z]
         self.wind_variance = rospy.get_param('~wind_variance', 0.5)  # Variance of wind speed
         self.update_rate = rospy.get_param('~update_rate', 10)  # Hz
+        self.max_wind_force = rospy.get_param('~max_wind_force', 5.0)  # Maximum wind force magnitude
         
         # Publishers
         self.wind_force_pub = rospy.Publisher('wind_force', Wrench, queue_size=10)
@@ -26,7 +27,13 @@ class WindSimulation:
         wind_y = np.random.normal(self.wind_mean[1], self.wind_variance)
         wind_z = np.random.normal(self.wind_mean[2], self.wind_variance)
         
-        return Vector3(wind_x, wind_y, wind_z)
+        # Limit wind force magnitude
+        wind_vector = np.array([wind_x, wind_y, wind_z])
+        magnitude = np.linalg.norm(wind_vector)
+        if magnitude > self.max_wind_force:
+            wind_vector = wind_vector * (self.max_wind_force / magnitude)
+        
+        return Vector3(wind_vector[0], wind_vector[1], wind_vector[2])
 
     def run(self):
         while not rospy.is_shutdown():
@@ -39,6 +46,8 @@ class WindSimulation:
             
             # Publish wind force
             self.wind_force_pub.publish(wind_force)
+            
+            rospy.logdebug(f"Published wind force: {wind_vector}")
             
             self.rate.sleep()
 
