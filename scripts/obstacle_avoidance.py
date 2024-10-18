@@ -3,7 +3,7 @@
 import rospy
 import numpy as np
 from sensor_msgs.msg import LaserScan
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, PoseStamped
 
 class ObstacleAvoidance:
     def __init__(self):
@@ -12,9 +12,12 @@ class ObstacleAvoidance:
         # Parameters
         self.min_distance = rospy.get_param('~min_distance', 0.5)  # Minimum distance to obstacle
         self.max_speed = rospy.get_param('~max_speed', 1.0)  # Maximum speed of the drone
+        self.avoid_distance = rospy.get_param('~avoid_distance', 1.0)  # Distance to keep from obstacles
+        self.field_of_view = rospy.get_param('~field_of_view', 180)  # Laser scanner field of view in degrees
         
         # Publishers and Subscribers
         self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+        self.avoidance_pose_pub = rospy.Publisher('avoidance_pose', PoseStamped, queue_size=10)
         rospy.Subscriber('scan', LaserScan, self.laser_callback)
         
         self.rate = rospy.Rate(10)  # 10 Hz
@@ -24,7 +27,8 @@ class ObstacleAvoidance:
 
     def laser_callback(self, msg):
         # Get the minimum distance from the laser scan
-        min_distance = min(msg.ranges)
+        ranges = np.array(msg.ranges)
+        min_distance = np.min(ranges)
         
         if min_distance < self.min_distance:
             # Obstacle detected, calculate avoidance vector
@@ -32,11 +36,25 @@ class ObstacleAvoidance:
             angle_increment = msg.angle_increment
             
             # Find the angle of the minimum distance reading
-            min_angle = angle_min + msg.ranges.index(min_distance) * angle_increment
+            min_angle_index = np.argmin(ranges)
+            min_angle = angle_min + min_angle_index * angle_increment
             
             # Calculate avoidance vector
             avoid_x = np.cos(min_angle + np.pi)
             avoid_y = np.sin(min_angle + np.pi)
+            
+            # Calculate desired position to avoid obstacle
+            desired_x = avoid_x * self.avoid_distance
+            desired_y = avoid_y * self.avoid_distance
+            
+            # Create and publish avoidance pose
+            avoidance_pose = PoseStamped()
+            avoidance_pose.header.stamp = rospy.Time.now()
+            avoidance_pose.header.frame_id = "base_link"
+            avoidance_pose.pose.position.x = desired_x
+            avoidance_pose.pose.position.y = desired_y
+            avoidance_pose.pose.position.z = 0
+                        self.avoidance_pose_pub.publish(avoidance_pose)
             
             # Set linear velocity inversely proportional to distance
             self.twist.linear.x = self.max_speed * (min_distance / self.min_distance)
