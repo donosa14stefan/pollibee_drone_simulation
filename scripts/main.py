@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import rospy
-from std_msgs.msg import Bool, Float32
+from std_msgs.msg import String, Bool
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
 
@@ -10,74 +10,76 @@ class MissionManager:
         rospy.init_node('mission_manager')
         
         # Publishers
-        self.start_mission_pub = rospy.Publisher('start_mission', Bool, queue_size=10)
-        self.abort_mission_pub = rospy.Publisher('abort_mission', Bool, queue_size=10)
+        self.mission_status_pub = rospy.Publisher('mission_status', String, queue_size=10)
+        self.mission_command_pub = rospy.Publisher('mission_command', String, queue_size=10)
         
         # Subscribers
-        rospy.Subscriber('battery_level', Float32, self.battery_callback)
         rospy.Subscriber('drone_pose', PoseStamped, self.pose_callback)
+        rospy.Subscriber('battery_level', Float32, self.battery_callback)
         rospy.Subscriber('planned_path', Path, self.path_callback)
         rospy.Subscriber('pollination_status', Bool, self.pollination_callback)
+        rospy.Subscriber('base_station_command', String, self.base_station_callback)
         
-        # Mission parameters
-        self.battery_threshold = rospy.get_param('~battery_threshold', 20.0)  # %
-        self.mission_complete = False
+        # State variables
         self.current_pose = None
-        self.planned_path = None
+        self.battery_level = None
+        self.current_path = None
         self.is_pollinating = False
+        self.mission_active = False
         
+        self.rate = rospy.Rate(1)  # 1 Hz
         rospy.loginfo("Mission Manager initialized")
-
-    def battery_callback(self, msg):
-        if msg.data < self.battery_threshold:
-            rospy.logwarn("Low battery! Aborting mission.")
-            self.abort_mission()
 
     def pose_callback(self, msg):
         self.current_pose = msg.pose
+        self.check_mission_progress()
+
+    def battery_callback(self, msg):
+        self.battery_level = msg.data
+        if self.battery_level < 20.0 and self.mission_active:
+            self.abort_mission("LOW_BATTERY")
 
     def path_callback(self, msg):
-        self.planned_path = msg
+        self.current_path = msg
+        self.check_mission_progress()
 
     def pollination_callback(self, msg):
         self.is_pollinating = msg.data
 
-    def start_mission(self):
-        start_msg = Bool()
-        start_msg.data = True
-        self.start_mission_pub.publish(start_msg)
-        rospy.loginfo("Mission started")
+    def base_station_callback(self, msg):
+        command = msg.data
+        if command == "START_MISSION":
+            self.start_mission()
+        elif command == "ABORT_MISSION":
+            self.abort_mission("BASE_STATION_COMMAND")
 
-    def abort_mission(self):
-        abort_msg = Bool()
-        abort_msg.data = True
-        self.abort_mission_pub.publish(abort_msg)
-        rospy.loginfo("Mission aborted")
+    def start_mission(self):
+        if not self.mission_active and self.battery_level > 90.0:
+            self.mission_active = True
+            self.mission_command_pub.publish("START")
+            self.mission_status_pub.publish("Mission started")
+        else:
+            rospy.logwarn("Cannot start mission: Battery level too low or mission already active")
+
+    def abort_mission(self, reason):
+        self.mission_active = False
+        self.mission_command_pub.publish("ABORT")
+        self.mission_status_pub.publish(f"Mission aborted: {reason}")
+
+    def check_mission_progress(self):
+        if self.mission_active and self.current_path and self.current_pose:
+            if len(self.current_path.poses) == 0:
+                self.mission_status_pub.publish("Mission completed")
+                self.mission_active = False
+            else:
+                progress = (1 - len(self.current_path.poses) / len(self.current_path.poses)) * 100
+                self.mission_status_pub.publish(f"Mission progress: {progress:.2f}%")
 
     def run(self):
-        rate = rospy.Rate(10)  # 10 Hz
-        self.start_mission()
-        
-        while not rospy.is_shutdown() and not self.mission_complete:
-            if self.planned_path and self.current_pose:
-                if self.is_path_complete():
-                    self.mission_complete = True
-                    rospy.loginfo("Mission completed successfully!")
-                
-            rate.sleep()
-
-    def is_path_complete(self):
-        if not self.planned_path or not self.current_pose:
-            return False
-        
-        last_point = self.planned_path.poses[-1].pose.position
-        current_position = self.current_pose.position
-        
-        distance = ((last_point.x - current_position.x) ** 2 +
-                    (last_point.y - current_position.y) ** 2 +
-                    (last_point.z - current_position.z) ** 2) ** 0.5
-        
-        return distance < 0.1  # Consider path complete if within 10 cm of last point
+        while not rospy.is_shutdown():
+            if self.mission_active:
+                self.check_mission_progress()
+            self.rate.sleep()
 
 if __name__ == '__main__':
     try:
