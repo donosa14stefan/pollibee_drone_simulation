@@ -1,50 +1,92 @@
 #!/usr/bin/env python3
 
 import rospy
-from geometry_msgs.msg import PoseStamped
+import numpy as np
+from geometry_msgs.msg import PoseStamped, Twist
 from std_msgs.msg import Bool
+from sensor_msgs.msg import Range
 
 class PollinationController:
     def __init__(self):
         rospy.init_node('pollination_controller')
         
-        self.flower_sub = rospy.Subscriber("flower_positions", PoseStamped, self.flower_callback)
-        self.drone_pose_sub = rospy.Subscriber("drone_pose", PoseStamped, self.drone_callback)
-        self.pollinate_pub = rospy.Publisher("pollinate", Bool, queue_size=10)
+        # Parameters
+        self.pollination_distance = rospy.get_param('~pollination_distance', 0.5)  # meters
+        self.pollination_duration = rospy.get_param('~pollination_duration', 2.0)  # seconds
+        self.hover_altitude = rospy.get_param('~hover_altitude', 1.5)  # meters
+        
+        # Publishers
+        self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+        self.pollinate_pub = rospy.Publisher('pollinate', Bool, queue_size=10)
+        
+        # Subscribers
+        rospy.Subscriber('flower_positions', PoseStamped, self.flower_callback)
+        rospy.Subscriber('drone_pose', PoseStamped, self.drone_pose_callback)
+        rospy.Subscriber('height', Range, self.height_callback)
         
         self.flower_position = None
         self.drone_position = None
-        self.pollination_distance = rospy.get_param('~pollination_distance', 0.5)  # meters
+        self.current_height = None
+        self.is_pollinating = False
         
+        self.rate = rospy.Rate(10)  # 10 Hz
         rospy.loginfo("Pollination Controller Node Initialized")
 
     def flower_callback(self, msg):
         self.flower_position = msg.pose.position
 
-    def drone_callback(self, msg):
+    def drone_pose_callback(self, msg):
         self.drone_position = msg.pose.position
         self.check_pollination()
 
+    def height_callback(self, msg):
+        self.current_height = msg.range
+
     def check_pollination(self):
-        if self.flower_position is None or self.drone_position is None:
+        if self.flower_position is None or self.drone_position is None or self.current_height is None:
             return
         
-        distance = ((self.flower_position.x - self.drone_position.x)**2 +
-                    (self.flower_position.y - self.drone_position.y)**2 +
-                                        (self.flower_position.z - self.drone_position.z)**2)**0.5
+        distance = np.linalg.norm([
+            self.flower_position.x - self.drone_position.x,
+            self.flower_position.y - self.drone_position.y
+        ])
 
-        if distance <= self.pollination_distance:
+        if distance <= self.pollination_distance and abs(self.current_height - self.hover_altitude) < 0.1:
             self.pollinate()
 
     def pollinate(self):
-        pollinate_msg = Bool()
-        pollinate_msg.data = True
-        self.pollinate_pub.publish(pollinate_msg)
-        rospy.loginfo("Pollinating flower!")
+        if not self.is_pollinating:
+            self.is_pollinating = True
+            rospy.loginfo("Starting pollination")
+            
+            # Stop the drone
+            stop_cmd = Twist()
+            self.cmd_vel_pub.publish(stop_cmd)
+            
+            # Activate pollination mechanism
+            pollinate_msg = Bool()
+            pollinate_msg.data = True
+            self.pollinate_pub.publish(pollinate_msg)
+            
+            # Wait for pollination duration
+            rospy.sleep(self.pollination_duration)
+            
+            # Deactivate pollination mechanism
+            pollinate_msg.data = False
+            self.pollinate_pub.publish(pollinate_msg)
+            
+            self.is_pollinating = False
+            rospy.loginfo("Pollination complete")
+
+    def run(self):
+        while not rospy.is_shutdown():
+            if not self.is_pollinating:
+                self.check_pollination()
+            self.rate.sleep()
 
 if __name__ == '__main__':
     try:
         controller = PollinationController()
-        rospy.spin()
+        controller.run()
     except rospy.ROSInterruptException:
         pass
