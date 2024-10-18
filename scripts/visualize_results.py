@@ -4,19 +4,26 @@ import rospy
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from geometry_msgs.msg import Pose
-from std_msgs.msg import Float32MultiArray
+from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Path
+from std_msgs.msg import Bool
 
 class Visualizer:
     def __init__(self):
         rospy.init_node('visualizer')
         
+        # Parameters
+        self.update_rate = rospy.get_param('~update_rate', 1)  # Hz
+        self.plot_window = rospy.get_param('~plot_window', 100)  # Number of points to display
+        
         # State variables
         self.drone_positions = []
         self.plant_positions = []
+        self.pollination_events = []
+        self.current_path = None
         
         # Set up the plot
-        self.fig = plt.figure(figsize=(10, 8))
+        self.fig = plt.figure(figsize=(12, 8))
         self.ax = self.fig.add_subplot(111, projection='3d')
         self.ax.set_xlabel('X')
         self.ax.set_ylabel('Y')
@@ -24,21 +31,30 @@ class Visualizer:
         self.ax.set_title('Drone Simulation Visualization')
         
         # Subscribers
-        rospy.Subscriber('drone_pose', Pose, self.drone_pose_callback)
-        rospy.Subscriber('plant_detections', Float32MultiArray, self.plant_detection_callback)
+        rospy.Subscriber('drone_pose', PoseStamped, self.drone_pose_callback)
+        rospy.Subscriber('plant_positions', PoseStamped, self.plant_callback)
+        rospy.Subscriber('pollinate', Bool, self.pollination_callback)
+        rospy.Subscriber('planned_path', Path, self.path_callback)
         
-        self.rate = rospy.Rate(10)  # 10 Hz
-        rospy.loginfo("Visualizer initialized")
+        self.rate = rospy.Rate(self.update_rate)
+        rospy.loginfo("Visualizer Node Initialized")
 
     def drone_pose_callback(self, msg):
-        self.drone_positions.append([msg.position.x, msg.position.y, msg.position.z])
-        if len(self.drone_positions) > 100:  # Keep only last 100 positions
+        self.drone_positions.append([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])
+        if len(self.drone_positions) > self.plot_window:
             self.drone_positions.pop(0)
 
-    def plant_detection_callback(self, msg):
-        self.plant_positions = np.array(msg.data).reshape(-1, 5)[:, :3]  # Keep only x, y, z
+    def plant_callback(self, msg):
+        self.plant_positions.append([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])
 
-        def update_plot(self):
+    def pollination_callback(self, msg):
+        if msg.data:
+            self.pollination_events.append(self.drone_positions[-1])
+
+    def path_callback(self, msg):
+        self.current_path = [[pose.pose.position.x, pose.pose.position.y, pose.pose.position.z] for pose in msg.poses]
+
+       def update_plot(self):
         self.ax.clear()
         self.ax.set_xlabel('X')
         self.ax.set_ylabel('Y')
@@ -52,8 +68,19 @@ class Visualizer:
             self.ax.scatter(drone_path[-1, 0], drone_path[-1, 1], drone_path[-1, 2], c='r', s=100, marker='o', label='Current Position')
 
         # Plot plant positions
-        if len(self.plant_positions) > 0:
-            self.ax.scatter(self.plant_positions[:, 0], self.plant_positions[:, 1], self.plant_positions[:, 2], c='g', marker='^', label='Plants')
+        if self.plant_positions:
+            plants = np.array(self.plant_positions)
+            self.ax.scatter(plants[:, 0], plants[:, 1], plants[:, 2], c='g', marker='^', label='Plants')
+
+        # Plot pollination events
+        if self.pollination_events:
+            events = np.array(self.pollination_events)
+            self.ax.scatter(events[:, 0], events[:, 1], events[:, 2], c='y', marker='*', s=200, label='Pollination Events')
+
+        # Plot planned path
+        if self.current_path:
+            path = np.array(self.current_path)
+            self.ax.plot(path[:, 0], path[:, 1], path[:, 2], 'r--', label='Planned Path')
 
         self.ax.legend()
         plt.draw()
