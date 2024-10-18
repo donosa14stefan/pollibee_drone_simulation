@@ -1,36 +1,58 @@
-// File: plugins/rviz/rviz_plugin.cpp
+// File: plugins/yolo/yolo_plugin.h
 
-#include "rviz_plugin.h"
+#ifndef POLLIBEE_YOLO_PLUGIN_H
+#define POLLIBEE_YOLO_PLUGIN_H
 
-namespace rviz
+#include <ros/ros.h>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/opencv.hpp>
+#include <opencv2/dnn.hpp>
+#include <vector>
+#include <string>
+#include <memory>
+#include <nlohmann/json.hpp>
+
+namespace yolo
 {
-  RvizPlugin::RvizPlugin() : rviz::Display()
+  class YoloPlugin : public ros::NodeHandle
   {
-    this->setName("RvizPlugin");
-    this->setIcon(QIcon(":/icons/rviz_plugin.png"));
-  }
+  public:
+    YoloPlugin();
+    virtual ~YoloPlugin() = default;
 
-  RvizPlugin::~RvizPlugin()
-  {
-  }
+  private:
+    image_transport::ImageTransport imageTransport;
+    image_transport::Publisher imagePub;
+    ros::Subscriber cameraSub;
 
-  void RvizPlugin::onInitialize()
-  {
-    this->initializeManager();
-  }
+    cv::dnn::Net net;
+    std::vector<std::string> classNames;
+    float confThreshold;
+    float nmsThreshold;
+    int inpWidth;
+    int inpHeight;
 
-  void RvizPlugin::onEnable()
-  {
-    this->enableManager();
-  }
+    std::string configPath;
+    std::string weightsPath;
+    std::string classesPath;
 
-  void RvizPlugin::onDisable()
-  {
-    this->disableManager();
-  }
+    void loadConfig();
+    void initializeYOLO();
+    void cameraCallback(const sensor_msgs::Image::ConstPtr &msg);
+    cv::Mat runYolo(const cv::Mat &image);
+    void drawPred(int classId, float conf, int left, int top, int right, int bottom, cv::Mat& frame);
+    std::vector<cv::Mat> getOutputsNames(const cv::dnn::Net& net);
 
-  void RvizPlugin::processMessage(const sensor_msgs::Image::ConstPtr &_msg)
-  {
-    // Procesează imaginea de la camera
-  }
+    // Multithreading
+    std::unique_ptr<std::thread> processingThread;
+    std::mutex mtx;
+    std::condition_variable cv;
+    std::queue<cv::Mat> imageQueue;
+    bool running;
+
+    void processImages();
+  };
 }
+
+#endif // POLLIBEE_YOLO_PLUGIN_H
