@@ -1,28 +1,36 @@
-#ifndef YOLO_PLUGIN_H
-#define YOLO_PLUGIN_H
+// File: plugins/rviz/rviz_plugin.cpp
 
-#include <ros/ros.h>
-#include <image_transport/image_transport.h>
-#include <cv_bridge/cv_bridge.h>
-#include <opencv2/opencv.hpp>
+#include "rviz_plugin.h"
 
-namespace yolo {
-class YoloPlugin : public ros::Node {
-public:
-  YoloPlugin();
-  virtual ~YoloPlugin();
+namespace rviz
+{
+  RvizPlugin::RvizPlugin() : rviz::Display()
+  {
+    this->setName("RvizPlugin");
+    this->setIcon(QIcon(":/icons/rviz_plugin.png"));
+  }
 
-  void cameraCallback(const sensor_msgs::Image::ConstPtr& msg);
+  RvizPlugin::~RvizPlugin()
+  {
+  }
 
-private:
-  ros::NodeHandle node_handle_;
-  image_transport::ImageTransport* image_transport_;
-  image_transport::Publisher image_pub_;
-  ros::Subscriber camera_sub_;
+  void RvizPlugin::onInitialize()
+  {
+    this->initializeManager();
+  }
 
-  cv::Mat runYolo(const cv::Mat& image);
-};
+  void RvizPlugin::onEnable()
+  {
+    this->enableManager();
+  }
 
-PLUGINLIB_EXPORT_CLASS(yolo::YoloPlugin, ros::Node)
+  void RvizPlugin::onDisable()
+  {
+    this->disableManager();
+  }
 
-#endif // YOLO_PLUGIN_H
+  void RvizPlugin::processMessage(const sensor_msgs::Image::ConstPtr &_msg)
+  {
+    // Procesează imaginea de la camera
+  }
+}
