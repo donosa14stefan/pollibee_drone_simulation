@@ -1,39 +1,68 @@
-#ifndef GAZEBO_PLUGIN_H
-#define GAZEBO_PLUGIN_H
+// File: plugins/gazebo/gazebo_plugin.h
 
-#include <ros/ros.h>
+#ifndef POLLIBEE_GAZEBO_PLUGIN_H
+#define POLLIBEE_GAZEBO_PLUGIN_H
+
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 #include <gazebo/sensors/sensors.hh>
 #include <gazebo/common/common.hh>
-#include <gazebo/math/gzmath.hh>
+#include <gazebo/transport/transport.hh>
+#include <gazebo/msgs/msgs.hh>
 
-namespace gazebo {
-class GazeboPlugin : public ModelPlugin {
-public:
-  GazeboPlugin();
-  virtual ~GazeboPlugin();
+#include <ros/ros.h>
+#include <std_msgs/Float32MultiArray.h>
+#include <sensor_msgs/Image.h>
+#include <geometry_msgs/Twist.h>
+#include <nav_msgs/Odometry.h>
 
-  void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
-  void Reset();
-  void Fini();
+#include <memory>
+#include <string>
 
-private:
-  void cameraCallback(const sensor_msgs::Image::ConstPtr& msg);
-  void update();
-  void OnWorldUpdateBegin();
-  void OnCameraImage(const sensor_msgs::Image::ConstPtr& msg);
-  void OnRosShutdown(const ros::ShutdownEventArgs& event);
+namespace gazebo
+{
+  class PolliBeeDronePlugin : public ModelPlugin
+  {
+    public: PolliBeeDronePlugin();
+    public: virtual ~PolliBeeDronePlugin();
 
-  ros::NodeHandle node_handle_;
-  ros::Publisher image_pub_;
-  ros::Subscriber camera_sub_;
-  physics::ModelPtr model_;
-  sdf::ElementPtr sdf_;
-  sensors::CameraSensorPtr camera_sensor_;
-  event::ConnectionPtr update_connection_;
-};
+    public: void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
+    protected: virtual void OnUpdate();
 
-GZ_REGISTER_MODEL_PLUGIN(GazeboPlugin)
+    private: void OnRosMsg(const geometry_msgs::TwistConstPtr &_msg);
+    private: void OnCameraMsg(ConstImageStampedPtr &_msg);
 
-#endif // GAZEBO_PLUGIN_H
+    private: std::unique_ptr<ros::NodeHandle> rosNode;
+    private: ros::Publisher rosPub;
+    private: ros::Subscriber rosSub;
+    private: ros::Publisher cameraPub;
+
+    private: std::unique_ptr<transport::Node> node;
+    private: transport::PublisherPtr pubPose;
+    private: transport::SubscriberPtr subCamera;
+
+    private: physics::ModelPtr model;
+    private: physics::LinkPtr link;
+    private: physics::JointPtr joint;
+    private: sensors::CameraSensorPtr cameraSensor;
+
+    private: event::ConnectionPtr updateConnection;
+
+    private: std::string robotNamespace;
+    private: std::string topicName;
+    private: std::string cameraTopicName;
+
+    private: double maxForce;
+    private: double motionSmallNoise;
+    private: double motionDriftNoise;
+    private: double motionDriftNoiseTime;
+
+    private: ignition::math::Vector3d velocity;
+    private: common::Time lastUpdateTime;
+
+    private: std::default_random_engine random_generator;
+    private: std::normal_distribution<double> standard_normal_distribution;
+  };
+}
+
+#endif // POLLIBEE_GAZEBO_PLUGIN_H
