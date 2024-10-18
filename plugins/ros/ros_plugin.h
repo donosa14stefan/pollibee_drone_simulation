@@ -1,5 +1,7 @@
-#ifndef ROS_PLUGIN_H
-#define ROS_PLUGIN_H
+// File: plugins/ros/ros_plugin.h
+
+#ifndef POLLIBEE_ROS_PLUGIN_H
+#define POLLIBEE_ROS_PLUGIN_H
 
 #include <ros/ros.h>
 #include <ros/node_handle.h>
@@ -7,21 +9,20 @@
 #include <ros/subscriber.h>
 #include <sensor_msgs/Image.h>
 
-namespace ros {
-class RosPlugin : public ros::Node {
-public:
-  RosPlugin();
-  virtual ~RosPlugin();
+namespace ros
+{
+  class RosPlugin : public ros::Node
+  {
+    public: RosPlugin();
+    public: virtual ~RosPlugin();
 
-  void cameraCallback(const sensor_msgs::Image::ConstPtr& msg);
-  void publishImage(const sensor_msgs::Image& image);
+    private: ros::NodeHandle nodeHandle;
+    private: ros::Publisher imagePub;
+    private: ros::Subscriber cameraSub;
 
-private:
-  ros::NodeHandle node_handle_;
-  ros::Publisher image_pub_;
-  ros::Subscriber camera_sub_;
-};
+    private: void cameraCallback(const sensor_msgs::Image::ConstPtr &_msg);
+    private: void publishImage(const sensor_msgs::Image &_msg);
+  };
+}
 
-PLUGINLIB_EXPORT_CLASS(ros::RosPlugin, ros::Node)
-
-#endif // ROS_PLUGIN_H
+#endif // POLLIBEE_ROS_PLUGIN_H
