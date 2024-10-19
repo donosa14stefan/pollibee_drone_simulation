@@ -1,10 +1,17 @@
 #include "mission_planner_plugin.h"
+#include <ros/ros.h>
+#include <ros/node_handle.h>
+#include <ros/publisher.h>
+#include <ros/subscriber.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <nav_msgs/Path.h>
+#include <std_msgs/Float32.h>
 
 namespace gazebo
 {
-    GZ_REGISTER_MODEL_PLUGIN(MissionPlannerPlugin)
+  GZ_REGISTER_MODEL_PLUGIN(MissionPlannerPlugin)
 
-  MissionPlannerPlugin::MissionPlannerPlugin() : currentWaypointIndex(0), 
+  MissionPlannerPlugin::MissionPlannerPlugin() : currentWaypointIndex(0),
     waypointReachedThreshold(0.5), batteryLevel(100.0), missionCompleted(false) {}
 
   void MissionPlannerPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
@@ -23,7 +30,7 @@ namespace gazebo
     this->poseSub = this->rosNode->subscribe("drone_pose", 1000, &MissionPlannerPlugin::PoseCallback, this);
 
     this->updateConnection = event::Events::ConnectWorldUpdateBegin(
-        std::bind(&MissionPlannerPlugin::OnUpdate, this, std::placeholders::_1));
+        std::bind(&MissionPlannerPlugin::OnUpdate, this));
 
     this->lastUpdateTime = this->world->SimTime();
 
@@ -32,12 +39,12 @@ namespace gazebo
     ROS_INFO("Mission Planner plugin initialized");
   }
 
-  void MissionPlannerPlugin::OnUpdate(const common::UpdateInfo &_info)
+  void MissionPlannerPlugin::OnUpdate()
   {
     common::Time currentTime = this->world->SimTime();
     double dt = (currentTime - this->lastUpdateTime).Double();
 
-    if (dt > 0.1)  // Update at 10Hz
+    if (dt > 0.1)
     {
       this->UpdateMission();
       this->PublishCurrentGoal();
@@ -47,7 +54,6 @@ namespace gazebo
 
   void MissionPlannerPlugin::GenerateSurveyPath()
   {
-    // Generăm o cale de survol simplă sub formă de grilă
     double fieldLength = 100.0;
     double fieldWidth = 50.0;
     double altitude = 10.0;
@@ -62,12 +68,11 @@ namespace gazebo
       }
       else
       {
-        this->waypoints.push_back(ignition::math::Vector3d(x, fieldWidth, altitude));
+        this->waypoints.push_back(ignition::math::Vector3d(x , fieldWidth, altitude));
         this->waypoints.push_back(ignition::math::Vector3d(x, 0, altitude));
       }
     }
 
-    // Publicăm calea completă
     nav_msgs::Path pathMsg;
     pathMsg.header.stamp = ros::Time::now();
     pathMsg.header.frame_id = "world";
@@ -84,7 +89,7 @@ namespace gazebo
     this->pathPub.publish(pathMsg);
   }
 
-   void MissionPlannerPlugin::UpdateMission()
+  void MissionPlannerPlugin::UpdateMission()
   {
     if (this->missionCompleted)
       return;
@@ -105,12 +110,11 @@ namespace gazebo
       this->currentWaypointIndex++;
     }
 
-    // Verificăm nivelul bateriei și decidem dacă e nevoie să ne întoarcem la bază
     if (this->batteryLevel < 20.0 && this->currentWaypointIndex > 0)
     {
       ROS_WARN("Low battery! Returning to base.");
-      this->waypoints.insert(this->waypoints.begin() + this->currentWaypointIndex, 
-                             ignition::math::Vector3d(0, 0, 10)); // Punctul de start
+      this->waypoints.insert(this->waypoints.begin() + this->currentWaypointIndex,
+                             ignition::math::Vector3d(0, 0, 10));
       this->currentWaypointIndex--;
     }
   }
