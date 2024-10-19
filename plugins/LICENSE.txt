@@ -1,0 +1,34 @@
+Custom Agreement License pentru plugins/
+Copyright (c) Ștefan Donosă 2024
+
+Toate drepturile rezervate.
+
+1. Definiții:
+   "Licențiator" înseamnă Ștefan Donosă.
+   "Software" înseamnă toate fișierele, codul sursă și documentația asociată conținute în directorul plugins/ al proiectului pollibee_drone_simulation.
+
+2. Acordarea licenței:
+   Licențiatorul acordă o licență limitată, non-exclusivă, ne-transferabilă și revocabilă pentru a vizualiza Softwareul doar în scopuri educaționale și de cercetare.
+
+3. Restricții:
+   a) Este strict interzisă copierea, modificarea, distribuirea, vânzarea, închirierea, împrumutul sau sublicențierea Softwareului sau a oricărei părți a acestuia.
+   b) Este interzisă crearea de lucrări derivate bazate pe Software.
+   c) Este interzisă utilizarea Softwareului în scopuri comerciale sau în orice proiect care nu este autorizat în mod expres de către Licențiator.
+   d) Este interzisă decompilarea, dezasamblarea sau încercarea de a obține codul sursă al Softwareului.
+
+4. Proprietate intelectuală:
+   Toate drepturile de proprietate intelectuală asupra Softwareului rămân proprietatea exclusivă a Licențiatorului.
+
+5. Garanție și răspundere:
+   Softwareul este furnizat "ca atare", fără nicio garanție. Licențiatorul nu va fi răspunzător pentru niciun fel de daune rezultate din utilizarea sau incapacitatea de a utiliza Softwareul.
+
+6. Reziliere:
+   Această licență se reziliază automat dacă încălcați oricare dintre termenii săi. La reziliere, trebuie să distrugeți toate copiile Softwareului.
+
+7. Legea aplicabilă:
+   Această licență este guvernată de legile României.
+
+8. Modificări ale licenței:
+   Licențiatorul își rezervă dreptul de a modifica termenii acestei licențe în orice moment, fără notificare prealabilă.
+
+Prin utilizarea, vizualizarea sau accesarea în orice mod a Softwareului, sunteți de acord să respectați termenii acestei licențe. Dacă nu sunteți de acord cu acești termeni, nu aveți permisiunea de a utiliza, vizualiza sau accesa Softwareul în niciun fel.
