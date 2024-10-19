@@ -1,5 +1,3 @@
-// File: plugins/ros/ros_plugin.cpp
-
 #include "ros_plugin.h"
 
 namespace ros
@@ -15,13 +13,13 @@ namespace ros
   {
   }
 
-  void RosPlugin::cameraCallback(const sensor_msgs::Image::ConstPtr &_msg)
+  void RosPlugin::cameraCallback(const sensor_msgs::Image::ConstPtr& msg)
   {
-    // Procesează imaginea de la camera
+    // Procesați imaginea de la camera
   }
 
-  void RosPlugin::publishImage(const sensor_msgs::Image &_msg)
+  void RosPlugin::publishImage(const sensor_msgs::Image& msg)
   {
-    this->imagePub.publish(_msg);
+    this->imagePub.publish(msg);
   }
 }
