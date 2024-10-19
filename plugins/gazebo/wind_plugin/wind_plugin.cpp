@@ -1,12 +1,15 @@
 #include "wind_plugin.h"
+#include <gazebo/physics/Model.hh>
+#include <gazebo/physics/Link.hh>
+#include <gazebo/sensors/Sensor.hh>
+#include <gazebo/sensors/WindSensor.hh>
 
 namespace gazebo
 {
   GZ_REGISTER_MODEL_PLUGIN(WindPlugin)
 
-  WindPlugin::WindPlugin() : windSpeed(0), windNoiseAmplitude(0.1), 
-    windGustProbability(0.01), windGustDuration(2.0), 
-    normalDistribution(0.0, 1.0) {}
+  WindPlugin::WindPlugin() : windSpeed(0), windNoiseAmplitude(0.1),
+    windGustProbability(0.01), windGustDuration(2.0), normalDistribution(0.0, 1.0) {}
 
   void WindPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   {
@@ -27,19 +30,22 @@ namespace gazebo
     this->windDirectionSub = this->rosNode->subscribe("wind_direction", 1000, &WindPlugin::WindDirectionCallback, this);
 
     this->updateConnection = event::Events::ConnectWorldUpdateBegin(
-        std::bind(&WindPlugin::OnUpdate, this, std::placeholders::_1));
+        std::bind(&WindPlugin::OnUpdate, this));
 
     this->lastUpdateTime = this->world->SimTime();
     this->lastGustTime = this->world->SimTime();
 
     ROS_INFO("Wind plugin initialized");
-    }
+  }
 
-  void WindPlugin::OnUpdate(const common::UpdateInfo &_info)
+  void WindPlugin::OnUpdate()
   {
-    this->UpdateWind();
+    common::Time currentTime = this->world->SimTime();
+    double dt = (currentTime - this->lastUpdateTime).Double();
+
+    this->UpdateWind(dt);
     this->ApplyWindForce();
-    
+
     geometry_msgs::Vector3 windMsg;
     windMsg.x = this->windForce.X();
     windMsg.y = this->windForce.Y();
@@ -47,31 +53,24 @@ namespace gazebo
     this->windPub.publish(windMsg);
   }
 
-  void WindPlugin::UpdateWind()
+  void WindPlugin::UpdateWind(double dt)
   {
-    common::Time currentTime = this->world->SimTime();
-    double dt = (currentTime - this->lastUpdateTime).Double();
-
-    // Add noise to wind
     double noise = this->windNoiseAmplitude * this->normalDistribution(this->randomGenerator);
     this->windSpeed += noise;
-    this->windSpeed = std::max(0.0, this->windSpeed);  // Ensure non-negative wind speed
+    this->windSpeed = std::max(0.0, this->windSpeed);
 
-    // Simulate wind gusts
     if (this->randomGenerator() / (double)this->randomGenerator.max() < this->windGustProbability * dt)
     {
       this->SimulateWindGust();
     }
 
-    // Update wind direction (slight random changes)
     ignition::math::Vector3d directionNoise(
         this->normalDistribution(this->randomGenerator),
         this->normalDistribution(this->randomGenerator),
-        0);  // Assuming wind doesn't have vertical component
+        0);
     this->windDirection += directionNoise * 0.1;
     this->windDirection.Normalize();
 
-    // Calculate wind force
     this->windForce = this->windDirection * this->windSpeed;
 
     this->lastUpdateTime = currentTime;
@@ -93,14 +92,13 @@ namespace gazebo
     physics::LinkPtr link = this->model->GetLink();
     if (link)
     {
-      // Calculate the force based on simple aerodynamics
-      double airDensity = 1.225;  // kg/m^3, at sea level and 15°C
-      double dragCoefficient = 0.47;  // Assuming a spherical drone for simplicity
-      double area = 0.1;  // m^2, frontal area of the drone
+      double airDensity = 1.225;
+      double dragCoefficient = 0.47;
+      double area = 0.1;
 
       ignition::math::Vector3d relativeWindVelocity = this->windForce - link->WorldLinearVel();
       double dynamicPressure = 0.5 * airDensity * relativeWindVelocity.SquaredLength();
-      
+
       ignition::math::Vector3d dragForce = dragCoefficient * area * dynamicPressure * relativeWindVelocity.Normalized();
 
       link->AddForce(dragForce);
@@ -115,7 +113,7 @@ namespace gazebo
     if (dt > this->windGustDuration)
     {
       this->lastGustTime = currentTime;
-      double gustMultiplier = 2.0 + this->normalDistribution(this->randomGenerator);  // Random gust between 1x and 3x current speed
+      double gustMultiplier = 2.0 + this->normalDistribution(this->randomGenerator);
       this->windSpeed *= gustMultiplier;
     }
   }
