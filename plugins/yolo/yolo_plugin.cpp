@@ -1,5 +1,3 @@
-// File: plugins/yolo/yolo_plugin.cpp
-
 #include "yolo_plugin.h"
 #include <fstream>
 #include <sstream>
@@ -37,7 +35,7 @@ namespace yolo
     weightsPath = config["weights_path"];
     classesPath = config["classes_path"];
     confThreshold = config["confidence_threshold"];
-    nmsThreshold = config["n ms_threshold"];
+    nmsThreshold = config["nms_threshold"];
     inpWidth = config["input_width"];
     inpHeight = config["input_height"];
   }
@@ -58,7 +56,7 @@ namespace yolo
     }
   }
 
-  void YoloPlugin::cameraCallback(const sensor_msgs::Image::ConstPtr &msg)
+  void YoloPlugin::cameraCallback(const sensor_msgs::Image::ConstPtr& msg)
   {
     try {
       cv_bridge::CvImagePtr cvPtr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
@@ -72,7 +70,7 @@ namespace yolo
     }
   }
 
-  cv::Mat YoloPlugin::runYolo(const cv::Mat &image)
+  cv::Mat YoloPlugin::runYolo(const cv::Mat& image)
   {
     cv::Mat blob = cv::dnn::blobFromImage(image, 1 / 255.0, cv::Size(inpWidth, inpHeight), cv::Scalar(0, 0, 0), true, false);
     net.setInput(blob);
@@ -115,7 +113,7 @@ namespace yolo
     return image;
   }
 
-  void YoloPlugin::drawPred(int classId, float conf, int left, int top, int right, int bottom, cv::Mat &frame)
+  void YoloPlugin:: drawPred(int classId, float conf, int left, int top, int right, int bottom, cv::Mat& frame)
   {
     cv::rectangle(frame, cv::Point(left, top), cv::Point(right, bottom), cv::Scalar(0, 255, 0), 2);
     std::string label = cv::format("%.2f", conf);
@@ -126,7 +124,7 @@ namespace yolo
     cv::putText(frame, label, cv::Point(left, top - 15), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 255), 2);
   }
 
-  std::vector<cv::Mat> YoloPlugin::getOutputsNames(const cv::dnn::Net &net)
+  std::vector<cv::Mat> YoloPlugin::getOutputsNames(const cv::dnn::Net& net)
   {
     std::vector<cv::Mat> names;
     for (int i = 0; i < net.getLayerCount(); ++i) {
@@ -138,7 +136,7 @@ namespace yolo
     return names;
   }
 
-  void Yolo Plugin::processImages()
+  void YoloPlugin::processImages()
   {
     while (running) {
       cv::Mat image;
