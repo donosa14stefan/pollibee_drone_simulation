@@ -10,40 +10,31 @@
 #include <rviz/properties/property_tree_widget.hpp>
 #include <sensor_msgs/Image.h>
 
-namespace rviz {
-class RvizPlugin : public rviz::Display {
-public:
-  RvizPlugin() : rviz::Display() {
-    // Initialize RViz display
+namespace rviz
+{
+  RvizPlugin::RvizPlugin() : rviz::Display()
+  {
     this->setName("RvizPlugin");
     this->setIcon(QIcon(":/icons/rviz_plugin.png"));
   }
 
-  void onInitialize() {
-    // Initialize RViz display
+  void RvizPlugin::onInitialize()
+  {
     this->initializeManager();
   }
 
-  void onEnable() {
-    // Enable RViz display
+  void RvizPlugin::onEnable()
+  {
     this->enableManager();
   }
 
-  void onDisable() {
-    // Disable RViz display
+  void RvizPlugin::onDisable()
+  {
     this->disableManager();
   }
 
-  void processMessage(const sensor_msgs::Image::ConstPtr& msg) {
-    // Process camera image message
+  void RvizPlugin::processMessage(const sensor_msgs::Image::ConstPtr& msg)
+  {
+    // Procesați imaginea de la camera
   }
-
-private:
-  rviz::VisualizationManager* manager_;
-  rviz::RenderPanel* render_panel_;
-  rviz::DisplayGroup* display_group_;
-  rviz::FrameManager* frame_manager_;
-};
-
-PLUGINLIB_EXPORT_CLASS(rviz::RvizPlugin, rviz::Display)
 }
