@@ -1,5 +1,3 @@
-// File: plugins/python/python_plugin.cpp
-
 #include "python_plugin.h"
 #include <ros/python_init.h>
 #include <ros/names.h>
