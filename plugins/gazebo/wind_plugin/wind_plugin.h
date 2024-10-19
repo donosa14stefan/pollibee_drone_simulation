@@ -7,6 +7,7 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Vector3.h>
 #include <std_msgs/Float32.h>
+#include <random>
 
 namespace gazebo
 {
@@ -15,29 +16,36 @@ namespace gazebo
     public:
       WindPlugin();
       virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
-      virtual void OnUpdate(const common::UpdateInfo & /*_info*/);
 
     private:
+      void OnUpdate(const common::UpdateInfo &_info);
+      void WindSpeedCallback(const std_msgs::Float32::ConstPtr& msg);
+      void WindDirectionCallback(const geometry_msgs::Vector3::ConstPtr& msg);
+      void UpdateWind();
+      void ApplyWindForce();
+      void SimulateWindGust();
+
       physics::ModelPtr model;
+      physics::WorldPtr world;
       event::ConnectionPtr updateConnection;
-      ros::NodeHandle* rosNode;
+      
+      std::unique_ptr<ros::NodeHandle> rosNode;
       ros::Publisher windPub;
       ros::Subscriber windSpeedSub;
       ros::Subscriber windDirectionSub;
       
+      ignition::math::Vector3d windForce;
       double windSpeed;
       ignition::math::Vector3d windDirection;
       
       double windNoiseAmplitude;
       double windGustProbability;
       double windGustDuration;
-      double lastGustTime;
-      
-      void UpdateWind();
-      void WindSpeedCallback(const std_msgs::Float32::ConstPtr& msg);
-      void WindDirectionCallback(const geometry_msgs::Vector3::ConstPtr& msg);
-      void ApplyWindForce();
-      void SimulateWindGust();
+      common::Time lastGustTime;
+      common::Time lastUpdateTime;
+
+      std::default_random_engine randomGenerator;
+      std::normal_distribution<double> normalDistribution;
   };
 }
 #endif
