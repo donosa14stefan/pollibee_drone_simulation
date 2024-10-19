@@ -1,6 +1,8 @@
-// File: plugins/gazebo/gazebo_plugin.cpp
-
 #include "gazebo_plugin.h"
+#include <gazebo/physics/Model.hh>
+#include <gazebo/physics/Link.hh>
+#include <gazebo/sensors/Sensor.hh>
+#include <gazebo/sensors/CameraSensor.hh>
 
 namespace gazebo
 {
@@ -23,7 +25,7 @@ namespace gazebo
   void PolliBeeDronePlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   {
     this->model = _model;
-    this->link = _model-> GetLink();
+    this->link = _model->GetLink();
     this->joint = _model->GetJoint();
     this->cameraSensor = _model->GetSensor("camera");
 
@@ -41,7 +43,8 @@ namespace gazebo
     this->pubPose = this->node->Advertise<msgs::Pose>("~/pose", 10);
     this->subCamera = this->node->Subscribe("~/camera/image_raw", &PolliBeeDronePlugin::OnCameraMsg, this);
 
-    this->updateConnection = event::Events::ConnectWorldUpdateBegin(boost::bind(&PolliBeeDronePlugin::OnUpdate, this));
+    this->updateConnection = event::Events::ConnectWorldUpdateBegin(
+        std::bind(&PolliBeeDronePlugin::OnUpdate, this));
   }
 
   void PolliBeeDronePlugin::OnUpdate()
@@ -52,13 +55,13 @@ namespace gazebo
     ignition::math::Vector3d velocity = this->velocity;
     ignition::math::Vector3d acceleration = ignition::math::Vector3d(0, 0, 0);
 
-    // Adaugă zgomotul de mișcare
-    double smallNoise = this->standard_normal_distribution(this->random_generator) * this->motionSmallNoise;
-    double driftNoise = this->standard_normal_distribution(this->random_generator) * this->motionDriftNoise;
-    velocity += ignition::math::Vector3d(smallNoise, smallNoise, smallNoise);
-    acceleration += ignition::math::Vector3d(driftNoise, driftNoise, driftNoise);
+    velocity += ignition::math::Vector3d(this->motionSmallNoise * this->randomGenerator(),
+                                         this->motionSmallNoise * this->randomGenerator(),
+                                         this->motionSmallNoise * this->randomGenerator());
+    acceleration += ignition::math::Vector3d(this->motionDriftNoise * this->randomGenerator(),
+                                             this->motionDriftNoise * this->randomGenerator(),
+                                             this->motionDriftNoise * this->randomGenerator());
 
-    // Limită viteza și accelerația
     velocity = ignition::math::Vector3d(std::min(std::max(velocity.X(), -this->maxForce), this->maxForce),
                                         std::min(std::max(velocity.Y(), -this->maxForce), this->maxForce),
                                         std::min(std::max(velocity.Z(), -this->maxForce), this->maxForce));
@@ -66,34 +69,32 @@ namespace gazebo
                                             std::min(std::max(acceleration.Y(), -this->maxForce), this->maxForce),
                                             std::min(std::max(acceleration.Z(), -this->maxForce), this->maxForce));
 
-    // Actualizează starea modelului
     this->model->SetLinearVel(velocity);
     this->model->SetAngularVel(acceleration);
 
-    // Publică poziția și viteza modelului
     msgs::Pose poseMsg;
     poseMsg.set_name(this->model->GetName());
     poseMsg.set_id(this->model->GetId());
     poseMsg.set_position(this->model->GetWorldPose().Pos());
     poseMsg.set_orientation(this->model->GetWorldPose().Rot());
-    this->pubPose->Publish(poseMsg);
+    this->pubPose->Publish(p oseMsg);
 
     this->lastUpdateTime = currentTime;
   }
 
-  void PolliBeeDronePlugin::OnRosMsg(const geometry_msgs::TwistConstPtr &_msg)
+  void PolliBeeDronePlugin::OnRosMsg(const geometry_msgs::Twist::ConstPtr& msg)
   {
-    this->velocity = ignition::math::Vector3d(_msg->linear.x, _msg->linear.y, _msg->linear.z);
+    this->velocity = ignition::math::Vector3d(msg->linear.x, msg->linear.y, msg->linear.z);
   }
 
-  void PolliBeeDronePlugin::OnCameraMsg(ConstImageStampedPtr &_msg)
+  void PolliBeeDronePlugin::OnCameraMsg(ConstImageStampedPtr& msg)
   {
     sensor_msgs::Image imageMsg;
-    imageMsg.header = _msg->time();
-    imageMsg.height = _msg->image().height();
-    imageMsg.width = _msg->image().width();
-    imageMsg.step = _msg->image().step();
-    imageMsg.data = _msg->image().data();
+    imageMsg.header = msg->time();
+    imageMsg.height = msg->image().height();
+    imageMsg.width = msg->image().width();
+    imageMsg.step = msg->image().step();
+    imageMsg.data = msg->image().data();
     this->cameraPub.publish(imageMsg);
   }
 }
