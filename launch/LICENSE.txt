@@ -1,11 +1,11 @@
-Custom Agreement License pentru scripts/
+Custom Agreement License pentru launch/
 Copyright (c) Ștefan Donosă 2024
 
 Toate drepturile rezervate.
 
 1. Definiții:
    "Licențiator" înseamnă Ștefan Donosă.
-   "Software" înseamnă toate fișierele, codul sursă și documentația asociată conținute în directorul scripts/ al proiectului pollibee_drone_simulation.
+   "Software" înseamnă toate fișierele, codul sursă și documentația asociată conținute în directorul launch/ al proiectului pollibee_drone_simulation.
 
 2. Acordarea licenței:
    Licențiatorul acordă o licență limitată, non-exclusivă, ne-transferabilă și revocabilă pentru a vizualiza Softwareul doar în scopuri educaționale și de cercetare.
