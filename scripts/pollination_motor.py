@@ -1,40 +1,31 @@
-#!/usr/bin/env python3
-
 import rospy
-import numpy as np
 from std_msgs.msg import Bool
-from geometry_msgs.msg import Twist
 
 class PollinationMotor:
     def __init__(self):
-        self.motor_pub = rospy.Publisher('pollination_motor', Bool, queue_size=10)
-        self.cmd_vel_sub = rospy.Subscriber('cmd_vel', Twist, self.cmd_vel_callback)
+        rospy.init_node('pollination_motor')
         
+        # Stare
         self.is_pollinating = False
         
-        rospy.loginfo("Pollination Motor initialized")
-
-    def cmd_vel_callback(self, msg):
-        if msg.linear.x > 0.5:
-            self.start_pollination()
-        else:
-            self.stop_pollination()
-
-    def start_pollination(self):
-        if not self.is_pollinating:
-            self.is_pollinating = True
-            self.motor_pub.publish(Bool(True))
-            rospy.loginfo("Starting pollination")
-
-    def stop_pollination(self):
+        # Publishers
+        self.pollination_pub = rospy.Publisher('/pollination_active', Bool, queue_size=10)
+        
+        # Subscribers
+        rospy.Subscriber('/pollination_command', Bool, self.pollination_callback)
+        
+    def pollination_callback(self, msg):
+        self.is_pollinating = msg.data
+        
+    def update(self):
         if self.is_pollinating:
-            self.is_pollinating = False
-            self.motor_pub.publish(Bool(False))
-            rospy.loginfo("Stopping pollination")
+            self.pollination_pub.publish(Bool(True))
+        else:
+            self.pollination_pub.publish(Bool(False))
+
+    def run(self):
+        rospy.spin()
 
 if __name__ == '__main__':
-    try:
-        motor = PollinationMotor()
-        rospy.spin()
-    except rospy.ROSInterruptException:
-        pass
+    motor = PollinationMotor()
+    motor.run()
