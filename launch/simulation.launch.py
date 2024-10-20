@@ -28,8 +28,16 @@ def generate_launch_description():
         output='screen'
     )
 
+    charging_station = Node(
+        package=package_name,
+        executable='charging_station.py',
+        name='charging_station',
+        output='screen'
+    )
+
     return LaunchDescription([
         drone_launch,
         wind_simulation,
-        battery_management
+        battery_management,
+        charging_station
     ])
