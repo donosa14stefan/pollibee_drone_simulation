@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import rospy
 import numpy as np
 from geometry_msgs.msg import PoseStamped, Twist
@@ -7,48 +5,50 @@ from nav_msgs.msg import Path
 
 class TrajectoryPlanner:
     def __init__(self):
-        self.path_pub = rospy.Publisher('path', Path, queue_size=10)
-        self.pose_sub = rospy.Subscriber('pose', Pose Stamped, self.pose_callback)
-        self.cmd_vel_sub = rospy.Subscriber('cmd_vel', Twist, self.cmd_vel_callback)
+        rospy.init_node('trajectory_planner')
         
+        # Parametri
+        self.max_velocity = rospy.get_param('~max_velocity', 1.0)
+        self.hover_altitude = rospy.get_param('~hover_altitude', 2.0)
+        
+        # Stare
         self.current_pose = None
-        self.current_cmd_vel = None
+        self.target_pose = None
+        self.path = None
         
-        rospy.loginfo("Trajectory Planner initialized")
-
+        # Publishers
+        self.path_pub = rospy.Publisher('/trajectory', Path, queue_size=10)
+        
+        # Subscribers
+        rospy.Subscriber('/drone_pose', PoseStamped, self.pose_callback)
+        rospy.Subscriber('/target_pose', PoseStamped, self.target_pose_callback)
+        
+        self.rate = rospy.Rate(20)  # 20 Hz
+        
     def pose_callback(self, msg):
         self.current_pose = msg
 
-    def cmd_vel_callback(self, msg):
-        self.current_cmd_vel = msg
+    def target_pose_callback(self, msg):
+        self.target_pose = msg
 
     def update(self):
-        if self.current_pose is None or self.current_cmd_vel is None:
+        if self.current_pose is None or self.target_pose is None:
             return
         
-        # Calculate desired trajectory
-        desired_trajectory = Path()
-        desired_trajectory.header = self.current_pose.header
-        desired_trajectory.poses.append(self.current_pose)
+        # Calculăm traseul
+        self.path = Path()
+        self.path.header = self.current_pose.header
+        self.path.poses.append(self.current_pose)
+        self.path.poses.append(self.target_pose)
         
-        # Calculate error
-        error = Twist()
-        error.linear.x = self.current_cmd_vel.linear.x - self.current_pose.pose.position.x
-        error.linear.y = self.current_cmd_vel.linear.y - self.current_pose.pose.position.y
-        error.linear.z = self.current_cmd_vel.linear.z - self.current_pose.pose.position.z
-        
-        # Calculate control output
-        control_output = Twist()
-        control_output.linear.x = error.linear.x
-        control_output.linear.y = error.linear.y
-        control_output.linear.z = error.linear.z
-        
-        # Publish control output
-        self.path_pub.publish(desired_trajectory)
+        # Publicăm traseul
+        self.path_pub.publish(self.path)
+
+    def run(self):
+        while not rospy.is _shutdown():
+            self.update()
+            self.rate.sleep()
 
 if __name__ == '__main__':
-    try:
-        planner = TrajectoryPlanner()
-        rospy.spin()
-    except rospy.ROSInterruptException:
-        pass
+    planner = TrajectoryPlanner()
+    planner.run()
