@@ -19,7 +19,7 @@ namespace gazebo
     if (_sdf->HasElement("windNoiseAmplitude"))
       this->windNoiseAmplitude = _sdf->Get<double>("windNoiseAmplitude");
     if (_sdf->HasElement("windGustProbability"))
-      this->windGustProbability = _sdf->Get<double>("windGustProbability");
+      this->windGustProbability = _sdf->Get<double>("windG ustProbability");
     if (_sdf->HasElement("windGustDuration"))
       this->windGustDuration = _sdf->Get<double>("windGustDuration");
 
