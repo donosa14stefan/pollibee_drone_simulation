@@ -61,7 +61,7 @@ namespace yolo
     try {
       cv_bridge::CvImagePtr cvPtr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
       {
-        std::lock_guard<std::mutex> lock(mtx);
+        std::lock _guard<std::mutex> lock(mtx);
         imageQueue.push(cvPtr->image);
       }
       cv.notify_one();
@@ -113,7 +113,7 @@ namespace yolo
     return image;
   }
 
-  void YoloPlugin:: drawPred(int classId, float conf, int left, int top, int right, int bottom, cv::Mat& frame)
+  void YoloPlugin::drawPred(int classId, float conf, int left, int top, int right, int bottom, cv::Mat& frame)
   {
     cv::rectangle(frame, cv::Point(left, top), cv::Point(right, bottom), cv::Scalar(0, 255, 0), 2);
     std::string label = cv::format("%.2f", conf);
