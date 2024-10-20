@@ -33,7 +33,7 @@ namespace rviz
     this->disableManager();
   }
 
-  void RvizPlugin::processMessage(const sensor_msgs::Image::ConstPtr& msg)
+  void RvizPlugin::processMessage(const sensor_msgs::Image::ConstPtr & msg)
   {
     // Procesați imaginea de la camera
   }
