@@ -3,7 +3,7 @@
 PollinationControlPlugin::PollinationControlPlugin() : nh_(nullptr),
   pollinationPub_(""), poseSub_(""), flowerDetectionSub_(""), batterySub_(""),
   windSpeedSub_(""), windDirectionSub_(""), currentPose_(), pollinationStatus_(),
-  flowerPositions_(), windSpeed_(0.0), windDirection_(0.0, 0.0, 0. 0), batteryLevel_(0.0),
+  flowerPositions_(), windSpeed_(0.0), windDirection_(0.0, 0.0, 0.0), batteryLevel_(0.0),
   isPollinating_(false) {}
 
 void PollinationControlPlugin::initialize(ros::NodeHandle& nh)
