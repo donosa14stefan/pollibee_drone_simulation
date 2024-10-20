@@ -22,7 +22,7 @@ namespace gazebo
     this->rosNode->shutdown();
   }
 
-  void PolliBeeDronePlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
+  void PolliBeeDrone Plugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   {
     this->model = _model;
     this->link = _model->GetLink();
@@ -77,7 +77,7 @@ namespace gazebo
     poseMsg.set_id(this->model->GetId());
     poseMsg.set_position(this->model->GetWorldPose().Pos());
     poseMsg.set_orientation(this->model->GetWorldPose().Rot());
-    this->pubPose->Publish(p oseMsg);
+    this->pubPose->Publish(poseMsg);
 
     this->lastUpdateTime = currentTime;
   }
