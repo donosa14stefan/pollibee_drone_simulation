@@ -267,5 +267,40 @@
       <motorName>pollination_motor</motorName>
       <jointName>pollination_arm_joint</jointName>
     </plugin>
+    <!-- Adăugare senzor IMU -->
+    <link name="imu_link">
+      <sensor name="imu_sensor" type="imu">
+        <always_on>1</always_on>
+        <update_rate>100</update_rate>
+        <visualize>true</visualize>
+        <topic>imu</topic>
+        <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+          <topicName>imu</topicName>
+          <bodyName>imu_link</bodyName>
+          <updateRateHZ>100.0</updateRateHZ>
+          <gaussianNoise>0.0</gaussianNoise>
+          <xyzOffset>0 0 0</xyzOffset>
+          <rpyOffset>0 0 0</rpyOffset>
+          <frameName>imu_link</frameName>
+        </plugin>
+      </sensor>
+    </link>
+
+    <joint name="imu_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>imu_link</child>
+    </joint>
+
+    <!-- Adăugare plugin baterie -->
+    <plugin name="battery_plugin" filename="libbattery_plugin.so">
+      <ros_node>battery_node</ros_node>
+      <link_name>base_link</link_name>
+      <battery_name>battery</battery_name>
+      <voltage>12.6</voltage>
+      <capacity>2200</capacity>
+      <discharge_rate>1.0</discharge_rate>
+      <charge_rate>0.5</charge_rate>
+    </plugin>
+
   </model>
 </sdf>
