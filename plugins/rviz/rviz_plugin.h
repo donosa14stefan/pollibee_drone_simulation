@@ -1,5 +1,3 @@
-// File: plugins/rviz/rviz_plugin.h
-
 #ifndef POLLIBEE_RVIZ_PLUGIN_H
 #define POLLIBEE_RVIZ_PLUGIN_H
 
@@ -31,5 +29,4 @@ namespace rviz
     private: void processMessage(const sensor_msgs::Image::ConstPtr &_msg);
   };
 }
-
-#endif // POLLIBEE_RVIZ_PLUGIN_H
+#endif
