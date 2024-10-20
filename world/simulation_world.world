@@ -100,7 +100,7 @@
     </include>
     <include>
       <uri>model://plant_row</uri>
-      <name>plant_row3</name>
+ <name>plant_row3</name>
       <pose>5 -3 0 0 0 0</pose>
     </include>
 
