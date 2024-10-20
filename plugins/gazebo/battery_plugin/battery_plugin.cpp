@@ -81,7 +81,7 @@ namespace gazebo
     double linearVelocity = std::sqrt(velocity.linear.x * velocity.linear.x +
                                       velocity.linear.y * velocity.linear.y +
                                       velocity.linear.z * velocity.linear.z);
-    double angularVelocity = std::abs(velocity .angular.z);
+    double angularVelocity = std::abs(velocity.angular.z);
 
     double linearConsumptionFactor = 0.1;
     double angularConsumptionFactor = 0.05;
