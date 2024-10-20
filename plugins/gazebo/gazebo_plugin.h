@@ -1,12 +1,9 @@
-// File: plugins/gazebo/gazebo_plugin.h
-
 #ifndef POLLIBEE_GAZEBO_PLUGIN_H
 #define POLLIBEE_GAZEBO_PLUGIN_H
 
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 #include <gazebo/sensors/sensors.hh>
-#include <gazebo/common/common.hh>
 #include <gazebo/transport/transport.hh>
 #include <gazebo/msgs/msgs.hh>
 
@@ -26,11 +23,8 @@ namespace gazebo
     public: PolliBeeDronePlugin();
     public: virtual ~PolliBeeDronePlugin();
 
-    public: void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
+    private: void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
     protected: virtual void OnUpdate();
-
-    private: void OnRosMsg(const geometry_msgs::TwistConstPtr &_msg);
-    private: void OnCameraMsg(ConstImageStampedPtr &_msg);
 
     private: std::unique_ptr<ros::NodeHandle> rosNode;
     private: ros::Publisher rosPub;
@@ -64,5 +58,4 @@ namespace gazebo
     private: std::normal_distribution<double> standard_normal_distribution;
   };
 }
-
-#endif // POLLIBEE_GAZEBO_PLUGIN_H
+#endif
