@@ -1,5 +1,3 @@
-// File: plugins/yolo/yolo_plugin.h
-
 #ifndef POLLIBEE_YOLO_PLUGIN_H
 #define POLLIBEE_YOLO_PLUGIN_H
 
@@ -7,7 +5,7 @@
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
-#include <opencv2/dnn.hpp>
+#include <opencv 2/dnn.hpp>
 #include <vector>
 #include <string>
 #include <memory>
@@ -54,5 +52,4 @@ namespace yolo
     void processImages();
   };
 }
-
-#endif // POLLIBEE_YOLO_PLUGIN_H
+#endif
