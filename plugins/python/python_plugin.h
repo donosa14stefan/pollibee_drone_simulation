@@ -1,5 +1,3 @@
-// File: plugins/python/python_plugin.h
-
 #ifndef POLLIBEE_PYTHON_PLUGIN_H
 #define POLLIBEE_PYTHON_PLUGIN_H
 
@@ -20,5 +18,4 @@ namespace python
     private: void runPython();
   };
 }
-
-#endif // POLLIBEE_PYTHON_PLUGIN_H
+#endif
