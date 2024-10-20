@@ -1,5 +1,3 @@
-// File: plugins/ros/ros_plugin.h
-
 #ifndef POLLIBEE_ROS_PLUGIN_H
 #define POLLIBEE_ROS_PLUGIN_H
 
@@ -24,5 +22,4 @@ namespace ros
     private: void publishImage(const sensor_msgs::Image &_msg);
   };
 }
-
-#endif // POLLIBEE_ROS_PLUGIN_H
+#endif
